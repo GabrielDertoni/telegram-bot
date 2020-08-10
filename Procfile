@@ -1,1 +1,1 @@
-web: telegram-bot-exe
+worker: telegram-bot-exe
