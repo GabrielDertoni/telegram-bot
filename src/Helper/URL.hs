@@ -4,7 +4,8 @@ module Helper.URL where
 (<:>) a b = a ++ "&" ++ b
 
 (<:?>) :: String -> Maybe String -> String
-(<:?>) a b = maybe a (a <:>) b
+(<:?>) [] b = maybe "" id  b
+(<:?>) a  b = maybe a (a <:>) b
 
 (<=>) :: String -> String -> String
 (<=>) a b = a <> "=" <> b

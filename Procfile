@@ -1,1 +1,1 @@
-worker: telegram-bot-exe
+worker: stack run

@@ -1,6 +1,7 @@
 module Helper.Telegram.GetUpdates
   ( GetUpdates(..)
   , offsetUpdate
+  , getUpdatesQuery
   ) where
 
 import qualified Network.URI.Encode as URI

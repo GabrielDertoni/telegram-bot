@@ -3,4 +3,4 @@
 .vscode/
 # Secret/
 Makefile
-data.json
+**/data.json
