@@ -26,10 +26,13 @@ dependencies:
 - aeson
 - utf8-string
 - async
+- zero-bullshit
+- extra
 
 default-extensions:
 - OverloadedStrings
 - DeriveGeneric
+- DeriveAnyClass
 
 library:
   source-dirs: src

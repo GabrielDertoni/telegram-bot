@@ -1,67 +1,72 @@
 module Dataproviders.AskDataprovider
-  ( askDataproviderImplementation
-  , constructQuery
+  ( AskWolfram(..)
+  , askDataproviderImplementation
   ) where
 
 import qualified Network.URI.Encode as URI
 import qualified Data.Aeson         as Aeson
 import Network.HTTP.Conduit
+import Data.Maybe
+import Control.Exception
 
 import qualified Entity.Question            as Q
 import qualified Entity.Answer              as A
 import qualified Secret.WolframAPI          as API
 import qualified Helper.Wolfram.APIResponse as Wolfram
 import           Helper.Maybe
+import           Helper.URL
+import           Helper.Query
+import qualified Helper.Wolfram             as Wolfram
 import           Interface.GetAnswer
 
 data AskWolfram
   = AskWolfram { appId :: String
                , format :: String
                , podstate :: String
-               , includepodid :: String
+               , includepodid :: [String]
                }
 
 instance GetAnswer AskWolfram where
   getAnswer dataprov (Q.Question str)
-    = let urlQuery = constructQuery dataprov str in
-      do response <- simpleHttp urlQuery
-         case Aeson.eitherDecode response of
-           Right result -> processResponse result
-           Left err     -> fail err
+    = let urlQuery = getURL dataprov <:> ("input" <=> URI.encode str) in
+      flip catch handleResponseException $
+        do putStrLn ("Querying: " ++ urlQuery)
+           response <- simpleHttp urlQuery
+           case Aeson.eitherDecode response of
+             Right result -> processResponse result
+             Left err     -> fail err
 
-baseURL :: String
-baseURL = "https://api.wolframalpha.com/v2/query?output=json"
+instance Query AskWolfram where
+  getURL wolfram = Wolfram.baseURL
+    <:> ("format" <=> format wolfram)
+    <:> ("podstate" <=> podstate wolfram)
+     <> (foldl (<:>) "" $ map ("includepodid" <=>) $ includepodid wolfram)
+
 
 askDataproviderImplementation :: AskWolfram
 askDataproviderImplementation
   = AskWolfram { appId = API.appId
                , format = "plaintext,image"
-               , podstate = "Result__Step-by-step+solution"
-               , includepodid = "Result"
+               , podstate = "Step-by-step%20solution"
+               , includepodid = ["Result", "Input"]
                }
 
 processResponse :: Wolfram.APIResponse -> IO A.Answer
 processResponse response
   = maybe (fail $ "Couldn't find the necessary data in " <> (show response)) return $
-    do text <- Wolfram.plaintext $ head subpods
-       img  <- Wolfram.img (subpods !! 1)
+    do pod <- listToMaybe $ Wolfram.pods qresult
+       fstSubpod <- listToMaybe $ Wolfram.subpods pod
+       let sndSubpod = last $ Wolfram.subpods pod
+       text <- Wolfram.plaintext fstSubpod
+       img  <- Wolfram.img sndSubpod
        return A.Answer { A.text = text
-                       , A.image = Wolfram.src img
+                       , A.image = Just $ Wolfram.src img
                        }
-    where subpods = Wolfram.subpods pod
-          pod     = head $ Wolfram.pods qresult
-          qresult = Wolfram.queryresult response
+    where qresult = Wolfram.queryresult response
 
-
-constructQuery :: AskWolfram -> String -> String
-constructQuery wolfram input = baseURL
-                            <> "&appid="
-                            <> (appId wolfram)
-                            <> "&format="
-                            <> (format wolfram)
-                            <> "&podstate="
-                            <> (podstate wolfram)
-                            <> "&includepodid="
-                            <> (includepodid wolfram)
-                            <> "&input="
-                            <> (URI.encode input)
+handleResponseException :: IOException -> IO A.Answer
+handleResponseException exception
+  = do print exception
+       return A.Answer { A.text  = "Failed to fetch answer from the Wolfram API\\.\\.\\.\nMaybe try a different question\\."
+                       , A.image = Nothing
+                       }

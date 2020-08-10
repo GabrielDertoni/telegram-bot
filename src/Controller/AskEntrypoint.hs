@@ -5,22 +5,29 @@ import Data.Maybe
 import qualified Data.Aeson as Aeson
 import Control.Concurrent.Async
 import Control.Exception
+import Text.Printf
 
-import qualified Helper.Telegram.Message   as Telegram
-import qualified Helper.Telegram.Chat      as Telegram
-import qualified Helper.Telegram.Update    as Telegram
-import qualified Helper.Telegram.SendPhoto as Telegram (replyPhoto)
+import qualified Helper.Telegram.Message     as Telegram
+import qualified Helper.Telegram.Chat        as Telegram
+import qualified Helper.Telegram.Update      as Telegram
+import qualified Helper.Telegram.SendMessage as Telegram (markdownReplyMessage, replyMessage)
 import UseCase.Ask
 import Dataproviders.AskDataprovider
 import qualified Entity.Question as Q
 import qualified Entity.Message  as M
 import qualified Entity.Answer   as A
 import qualified Controller.SendMessage as Send
+import qualified Interface.ToMarkdown as I
 
 -- TODO: Change folder name from "Controller" to "Entrypoint"
 
+instance I.ToMarkdown M.Message where
+  markdown (M.ImageMessage img [] ) = printf "[image](%s)" img
+  markdown (M.ImageMessage img cap) = printf "[%s](%s)" cap img
+  markdown (M.TextMessage  text   ) = text
+
 main_entrypoint :: [Telegram.Update] -> IO ()
-main_entrypoint updates = sequence_ $ map (\up -> catch (assign_entrypoint up) handleEntrypoint) updates
+main_entrypoint = mapConcurrently_ (handle handleEntrypoint . assign_entrypoint) 
   where handleEntrypoint :: IOException -> IO ()
         handleEntrypoint = print
 
@@ -36,14 +43,15 @@ assign_entrypoint update = case command of
 
 call_entrypoint :: String -> String -> IO M.Message
 call_entrypoint command content
-  | command == "/wolfram" = ask_entrypoint content
+  | command == "/wolfram" = if filter (/= ' ') content == ""
+                              then return M.noContentMessage
+                              else ask_entrypoint content
+  | command == "/start" = return M.helloMessage
   | otherwise = fail "Nenhum comando com esse nome..."
 
 answerToMessage :: A.Answer -> M.Message
 answerToMessage ans
-  = M.ImageMessage { M.image   = A.image ans
-                   , M.caption = ""
-                   }
+  = maybe (M.simpleMessage $ A.text ans) M.imageMessage (A.image ans)
 
 ask_entrypoint :: String -> IO M.Message
 ask_entrypoint text
@@ -53,12 +61,14 @@ ask_entrypoint text
        putStrLn $ show answer
        return $ answerToMessage answer
 
-
 sendResponseMessage :: Telegram.Message -> M.Message -> IO ()
-sendResponseMessage msg (M.ImageMessage ansImg _)
-  = let reply = Telegram.replyPhoto (Telegram.chat_id chat) ansImg (Telegram.message_id msg) in
-    Send.sendPhoto reply
-  where chat = Telegram.chat msg
+sendResponseMessage msg ans
+  = case ans of
+      M.TextMessage text -> Send.sendMessage $ Telegram.replyMessage cid text mid
+      M.ImageMessage img caption -> Send.sendMessage $ Telegram.markdownReplyMessage cid (I.markdown ans) mid
+  where cid  = Telegram.chat_id chat
+        mid  = Telegram.message_id msg
+        chat = Telegram.chat msg
 
 getCommand :: Telegram.Message -> Maybe (String, String)
 getCommand msg = do entity <- head <$> Telegram.entities msg
