@@ -27,7 +27,7 @@ instance I.ToMarkdown M.Message where
   markdown (M.TextMessage  text   ) = text
 
 main_entrypoint :: [Telegram.Update] -> IO ()
-main_entrypoint = mapConcurrently_ (handle handleEntrypoint . assign_entrypoint) 
+main_entrypoint = mapConcurrently_ (handle handleEntrypoint . assign_entrypoint)
   where handleEntrypoint :: IOException -> IO ()
         handleEntrypoint = print
 

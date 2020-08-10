@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b649fa64a0abefdc64d94941b611cb19ca4458659d788506d142bf574446d736
+-- hash: 3097c147f1eb1a71a5230fed24f242735210454fdce76a3fe8ded6707e7b57ca
 
 name:           telegram-bot
 version:        0.1.0.0
@@ -27,9 +27,13 @@ source-repository head
 
 library
   exposed-modules:
+      API.GetDataHandler
       API.UpdateHandler
+      Configuration.HerokuConfig
+      Configuration.TelegramConfig
       Controller.AskEntrypoint
       Controller.SendMessage
+      Controller.SetWebhook
       Dataproviders.AskDataprovider
       Dataproviders.BotInfo
       Entity.Answer
@@ -44,6 +48,7 @@ library
       Helper.Telegram.Message
       Helper.Telegram.SendMessage
       Helper.Telegram.SendPhoto
+      Helper.Telegram.SetWebhook
       Helper.Telegram.Update
       Helper.Telegram.User
       Helper.Telegram.WebHookInfo
