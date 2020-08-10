@@ -41,9 +41,9 @@ run = forever $ handle handleException $ do
     info <- getInfo
     response <- simpleHttp $ getURL $ offsetUpdate $ update_offset info
     case Aeson.eitherDecode response of
-        Right decoded -> do main_entrypoint $ results decoded
-                            updateInfo decoded info
-
+        Right decoded -> do updateInfo decoded info
+                            main_entrypoint $ results decoded
+                            
         Left err      -> fail err
     
     putStrLn "Just read the updates..."
