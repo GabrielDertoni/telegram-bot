@@ -67,6 +67,6 @@ processResponse response
 handleResponseException :: IOException -> IO A.Answer
 handleResponseException exception
   = do print exception
-       return A.Answer { A.text  = "Failed to fetch answer from the Wolfram API\\.\\.\\.\nMaybe try a different question\\."
+       return A.Answer { A.text  = "Failed to fetch answer from the Wolfram API...\nMaybe try a different question."
                        , A.image = Nothing
                        }
