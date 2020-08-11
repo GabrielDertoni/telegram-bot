@@ -4,3 +4,4 @@
 # Secret/
 Makefile
 **/data.json
+**/.env
