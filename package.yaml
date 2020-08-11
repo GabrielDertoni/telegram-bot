@@ -26,8 +26,9 @@ dependencies:
 - aeson
 - utf8-string
 - async
-- zero-bullshit
 - extra
+- scotty
+- http-types
 
 default-extensions:
 - OverloadedStrings

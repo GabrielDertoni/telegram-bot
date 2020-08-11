@@ -1,26 +1,32 @@
 module API.UpdateHandler where
 
 import Control.Exception
-import qualified Zero.Server as Server
+import qualified Web.Scotty as Scotty
+import qualified Data.Aeson as Aeson
+import Control.Monad.IO.Class
+import Data.ByteString.Lazy.UTF8 (ByteString)
 
 import Secret.TelegramAPI as Telegram
 import Helper.Telegram.Update
 import Controller.AskEntrypoint
 
-updateCallback :: Server.Request -> IO Server.Response
-updateCallback req = case decodeRequest req of
-                      Right update -> do handle handleEntrypoint $ assign_entrypoint update
-                                         return $ Server.stringResponse "Ok"
-                      Left err      -> fail err
-  where handleEntrypoint :: IOException -> IO ()
-        handleEntrypoint = print
+updateCallback :: Scotty.ActionM ()
+updateCallback = do
+      req <- Scotty.body
+      case decodeRequest req of
+        Right update -> do liftIO $ assign_entrypoint update
+                           Scotty.text "Ok"
+        Left err     -> fail err
 
-printCallback :: Server.Request -> IO Server.Response
-printCallback req = do print $ Server.requestBody req
-                       return $ Server.stringResponse "True"
+printCallback :: Scotty.ActionM ()
+printCallback = do req <- Scotty.body
+                   liftIO $ print req
+                   Scotty.text "True"
 
-decodeRequest :: Server.Request -> Either String Update
-decodeRequest = Server.decodeJson . Server.requestBody
+decodeRequest :: ByteString -> Either String Update
+decodeRequest = Aeson.eitherDecode
 
-updateHandler :: Server.Handler
-updateHandler = Server.effectfulHandler Server.POST ("/" <> Telegram.apiKey <> "/update") updateCallback
+updateHandlerPath = "/" <> Telegram.apiKey <> "/update"
+
+updateHandler :: Scotty.ScottyM ()
+updateHandler = Scotty.post (Scotty.capture updateHandlerPath) updateCallback

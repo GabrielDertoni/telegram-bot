@@ -1,12 +1,14 @@
 module API.GetDataHandler where
 
-import qualified Zero.Server as Server
+import qualified Web.Scotty as Scotty
+import Control.Monad.IO.Class
 
 import Dataproviders.BotInfo
 import qualified Secret.TelegramAPI as Telegram
 
-getDataCallback :: Server.Request -> IO Server.Response
-getDataCallback _ = Server.jsonResponse <$> getInfo
+getDataCallback :: Scotty.ActionM ()
+getDataCallback  = do info <- liftIO $ getInfo
+                      Scotty.json info
 
-getDataHandler :: Server.Handler
-getDataHandler = Server.effectfulHandler Server.GET ("/" <> Telegram.apiKey <> "/data") getDataCallback
+getDataHandler :: Scotty.ScottyM ()
+getDataHandler = Scotty.get (Scotty.capture ("/" <> Telegram.apiKey <> "/data")) getDataCallback

@@ -1,29 +1,21 @@
 module Lib (run) where
 
-import Zero.Server
-import System.Time.Extra
-import Control.Concurrent
-import Control.Monad
 import qualified Data.Aeson as Aeson
-import Network.HTTP.Conduit
 import Data.Maybe
-import Control.Exception
+import Web.Scotty
+import System.Environment
+import Control.Exception (IOException, catch)
 
 import Helper.Telegram.GetUpdatesResponse
-import Controller.AskEntrypoint
 import Controller.SetWebhook
 import API.UpdateHandler
 import API.GetDataHandler
 import Helper.Telegram
-import Helper.Query
-import Helper.Telegram.GetUpdates
 import Dataproviders.BotInfo
-import Helper.Telegram.GetUpdatesResponse as Telegram
-import Helper.Telegram.Update as Telegram
-import Helper.Telegram.Message as Telegram
 import Helper.Telegram.SetWebhook as Telegram
 import Configuration.TelegramConfig as Telegram
 
+{-
 getLastUpdateId :: Telegram.GetUpdatesResponse -> Maybe Integer
 getLastUpdateId resp = case Telegram.results resp of
                         []      -> Nothing
@@ -37,8 +29,22 @@ updateInfo resp info = maybe (return ()) (updateOffset info) $ getLastUpdateId r
 
 handleException :: SomeException -> IO ()
 handleException = print
+-}
+
+useDefaultPort :: IOException -> IO String
+useDefaultPort _ = do putStrLn "No environment variable set for port, using default 8000"
+                      return "8000"
 
 run :: IO ()
+run = do
+    setWebhook $ Telegram.simpleWebhook Telegram.webhookURL
+    port <- catch (getEnv "PORT") useDefaultPort
+    scotty (read port) $ do
+      updateHandler
+      getDataHandler
+
+
+
 -- run = forever $ handle handleException $ do
 --     info <- getInfo
 --     response <- simpleHttp $ getURL $ offsetUpdate $ update_offset info
@@ -50,10 +56,16 @@ run :: IO ()
     
 --     putStrLn "Just read the updates..."
 --     sleep $ sleep_time info
-run = do setWebhook $ Telegram.simpleWebhook Telegram.webhookURL
-         startServer [ updateHandler
-                     , getDataHandler
-                     ]
+
+
+
+-- run = do setWebhook $ Telegram.simpleWebhook Telegram.webhookURL
+--          startServer [ updateHandler
+--                      , getDataHandler
+--                      ]
+
+
+
 -- run = do
 --     response <- simpleHttp url
 --     either fail (main_entrypoint . results) $ Aeson.eitherDecode response
