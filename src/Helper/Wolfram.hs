@@ -1,6 +1,8 @@
 module Helper.Wolfram where
 
-import Secret.WolframAPI
+import qualified Configuration.WolframConfig as API
 
-baseURL :: String
-baseURL = "https://api.wolframalpha.com/v2/query?output=json&appid=" <> appId
+baseURL = "https://api.wolframalpha.com/v2/query?"
+
+getBaseURL :: IO String
+getBaseURL = ((<>) baseURL) <$> API.getAppId

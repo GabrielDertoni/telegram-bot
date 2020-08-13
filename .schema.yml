@@ -1,0 +1,6 @@
+- name: TELEGRAM_API_KEY
+  type: text
+  required: true
+- name: WOLFRAM_APP_ID
+  type: text
+  required: true

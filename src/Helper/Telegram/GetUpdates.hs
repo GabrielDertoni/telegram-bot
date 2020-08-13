@@ -7,8 +7,7 @@ module Helper.Telegram.GetUpdates
 import qualified Network.URI.Encode as URI
 
 import qualified Helper.Telegram as Telegram
-import Helper.Query
-import Helper.URL
+import           Helper.Query
 
 data GetUpdates
   = GetUpdates { offset :: Maybe Integer
@@ -18,7 +17,7 @@ data GetUpdates
                }
 
 instance Query GetUpdates where
-  getURL msg = Telegram.endpointURL "getUpdates" <> getUpdatesQuery msg
+  getURL msg = (<> getUpdatesQuery msg) <$> Telegram.getEndpointURL "getUpdates"
 
 getUpdatesQuery :: GetUpdates -> String
 getUpdatesQuery req = "" 

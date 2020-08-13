@@ -7,6 +7,7 @@ import Helper.Telegram.SetWebhook as Telegram
 
 setWebhook :: Telegram.SetWebhook -> IO ()
 setWebhook sw = do
+  url <- getURL sw
   putStrLn "Setting webhook..."
-  response <- simpleHttp $ getURL sw
+  response <- simpleHttp url
   return ()

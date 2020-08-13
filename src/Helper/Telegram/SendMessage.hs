@@ -5,11 +5,14 @@ module Helper.Telegram.SendMessage
   , markdownReplyMessage
   ) where
 
+import           GHC.Generics (Generic)
+import           Data.Aeson ((.=))
+import qualified Data.Aeson as Aeson
 import qualified Network.URI.Encode as URI
 
-import Helper.Query
-import Helper.URL
+import           Helper.Query
 import qualified Helper.Telegram as Telegram
+
 -- TODO: Implement support for reply_markup
 
 data SendMessage
@@ -18,10 +21,20 @@ data SendMessage
                 , parse_mode :: Maybe String
                 , disable_notification :: Maybe Bool
                 , reply_to_message_id :: Maybe Int
-                } deriving (Eq, Show)
+                }
+  deriving (Eq, Show, Generic)
+
+instance Aeson.ToJSON SendMessage where
+  toJSON sendMsg = Aeson.object [ "chat_id" .= chat_id sendMsg
+                                , "text" .= text sendMsg
+                                , "parse_mode" .= parse_mode sendMsg
+                                , "disable_notification" .= disable_notification sendMsg
+                                , "reply_to_message_id" .= reply_to_message_id sendMsg
+                                , "method" .= ("sendMessage" :: String)
+                                ]
 
 instance Query SendMessage where
-  getURL msg = Telegram.endpointURL "sendMessage" <> sendMessageQuery msg
+  getURL msg = (<> sendMessageQuery msg) <$> Telegram.getEndpointURL "sendMessage"
 
 sendMessageQuery :: SendMessage -> String
 sendMessageQuery msg

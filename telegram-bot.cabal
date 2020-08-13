@@ -1,16 +1,16 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.31.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 33b05850311058cd7925f7604122c549c26ba9fab14500d9bfa27a5582abc8c1
+-- hash: b0ece3d344247ed1120e105d98fa1e37b7a92cfef9fa83a854741e0187ad38e3
 
 name:           telegram-bot
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/telegram-bot#readme>
-homepage:       https://github.com/githubuser/telegram-bot#readme
-bug-reports:    https://github.com/githubuser/telegram-bot/issues
+description:    Please see the README on GitHub at <https://github.com/GabrielDertoni/telegram-bot#readme>
+homepage:       https://github.com/GabrielDertoni/telegram-bot#readme
+bug-reports:    https://github.com/GabrielDertoni/telegram-bot/issues
 author:         Author name here
 maintainer:     example@example.com
 copyright:      2020 Author name here
@@ -23,7 +23,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/telegram-bot
+  location: https://github.com/GabrielDertoni/telegram-bot
 
 library
   exposed-modules:
@@ -31,6 +31,7 @@ library
       API.UpdateHandler
       Configuration.HerokuConfig
       Configuration.TelegramConfig
+      Configuration.WolframConfig
       Controller.AskEntrypoint
       Controller.SendMessage
       Controller.SetWebhook
@@ -42,24 +43,17 @@ library
       Helper.Maybe
       Helper.Query
       Helper.Telegram
-      Helper.Telegram.Chat
       Helper.Telegram.GetUpdates
-      Helper.Telegram.GetUpdatesResponse
-      Helper.Telegram.Message
       Helper.Telegram.SendMessage
       Helper.Telegram.SendPhoto
       Helper.Telegram.SetWebhook
-      Helper.Telegram.Update
-      Helper.Telegram.User
+      Helper.Telegram.Types
       Helper.Telegram.WebHookInfo
-      Helper.URL
       Helper.Wolfram
       Helper.Wolfram.APIResponse
       Interface.GetAnswer
       Interface.ToMarkdown
       Lib
-      Secret.TelegramAPI
-      Secret.WolframAPI
       UseCase.Ask
   other-modules:
       Paths_telegram_bot
@@ -70,6 +64,7 @@ library
       aeson
     , async
     , base >=4.7 && <5
+    , dotenv
     , extra
     , http-conduit
     , http-types
@@ -90,6 +85,7 @@ executable telegram-bot-exe
       aeson
     , async
     , base >=4.7 && <5
+    , dotenv
     , extra
     , http-conduit
     , http-types
@@ -112,6 +108,7 @@ test-suite telegram-bot-test
       aeson
     , async
     , base >=4.7 && <5
+    , dotenv
     , extra
     , http-conduit
     , http-types

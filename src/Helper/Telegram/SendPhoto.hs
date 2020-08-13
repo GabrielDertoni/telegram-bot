@@ -7,9 +7,8 @@ module Helper.Telegram.SendPhoto
 import qualified Network.URI.Encode as URI
 
 import qualified Helper.Telegram as Telegram
-import Helper.Query
-import Helper.URL
-import Helper.Maybe
+import           Helper.Query
+import           Helper.Maybe
 
 -- TODO: Implement reply_markup as well
 
@@ -23,7 +22,7 @@ data SendPhoto
               } deriving (Eq, Show)
 
 instance Query SendPhoto where
-  getURL pic = Telegram.endpointURL "sendPhoto" <> sendPhotoQuery pic
+  getURL pic = (<> sendPhotoQuery pic) <$> Telegram.getEndpointURL "sendPhoto"
 
 sendPhotoQuery :: SendPhoto -> String
 sendPhotoQuery pic

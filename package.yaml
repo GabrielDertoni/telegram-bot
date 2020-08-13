@@ -1,6 +1,6 @@
 name:                telegram-bot
 version:             0.1.0.0
-github:              "githubuser/telegram-bot"
+github:              "GabrielDertoni/telegram-bot"
 license:             BSD3
 author:              "Author name here"
 maintainer:          "example@example.com"
@@ -17,7 +17,7 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/telegram-bot#readme>
+description:         Please see the README on GitHub at <https://github.com/GabrielDertoni/telegram-bot#readme>
 
 dependencies:
 - base >= 4.7 && < 5
@@ -29,6 +29,7 @@ dependencies:
 - extra
 - scotty
 - http-types
+- dotenv
 
 default-extensions:
 - OverloadedStrings

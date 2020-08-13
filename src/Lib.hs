@@ -5,8 +5,9 @@ import Data.Maybe
 import Web.Scotty
 import System.Environment
 import Control.Exception (IOException, catch)
+import Configuration.Dotenv (loadFile, defaultConfig, onMissingFile)
 
-import Helper.Telegram.GetUpdatesResponse
+import Helper.Telegram.Types
 import Controller.SetWebhook
 import API.UpdateHandler
 import API.GetDataHandler
@@ -37,8 +38,13 @@ useDefaultPort _ = do putStrLn "No environment variable set for port, using defa
 
 run :: IO ()
 run = do
-    setWebhook $ Telegram.simpleWebhook Telegram.webhookURL
+    -- Will try to load the environment variables from .env file
+    -- if no such file is found, it will do nothing and may fail later.
+    onMissingFile (loadFile defaultConfig) $ return []
+    setWebhook <$> Telegram.simpleWebhook <$> Telegram.getWebhookURL
     port <- catch (getEnv "PORT") useDefaultPort
+    updateHandler  <- getUpdateHandler
+    getDataHandler <- getGetDataHandler
     scotty (read port) $ do
       updateHandler
       getDataHandler

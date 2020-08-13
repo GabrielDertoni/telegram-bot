@@ -7,4 +7,5 @@ import GHC.Generics (Generic)
 
 data WebHookInfo
   = WebHookInfo { url :: String
-                } deriving (Eq, Show, Generic, Aeson.ToJSON, Aeson.FromJSON)
+                }
+  deriving (Eq, Show, Generic, Aeson.ToJSON, Aeson.FromJSON)

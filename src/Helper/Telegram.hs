@@ -1,12 +1,15 @@
 module Helper.Telegram where
 
-import Secret.TelegramAPI as API
+import Configuration.TelegramConfig as API
 
 baseURL :: String
 baseURL = "https://api.telegram.org/bot"
 
-botURL :: String
-botURL = baseURL <> API.apiKey
+getBotURL :: IO String
+getBotURL = ((<>) baseURL) <$> API.getApiKey
 
-endpointURL :: String -> String
-endpointURL name = botURL <> "/" <> name <> "?"
+getEndpointURL :: String -> IO String
+getEndpointURL name = (<> "/" <> name <> "?") <$> getBotURL
+
+getUpdatesURL :: IO String
+getUpdatesURL = getEndpointURL "getUpdates"

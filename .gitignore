@@ -5,3 +5,4 @@
 Makefile
 **/data.json
 **/.env
+dist-newstyle/

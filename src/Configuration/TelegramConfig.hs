@@ -1,8 +1,12 @@
 module Configuration.TelegramConfig where
 
-import Configuration.HerokuConfig as Heroku
-import Helper.Telegram            as Telegram
-import Secret.TelegramAPI         as Telegram
+import System.Environment
 
-webhookURL = Heroku.projectURL <> Telegram.apiKey <> "/update"
-updatesURL = Telegram.endpointURL "getUpdates"
+import Configuration.HerokuConfig as Heroku
+
+getApiKey :: IO String
+getApiKey = getEnv "TELEGRAM_API_KEY"
+
+getWebhookURL :: IO String
+getWebhookURL = do apiKey <- getApiKey
+                   return $ Heroku.projectURL <> apiKey <> "/update"
