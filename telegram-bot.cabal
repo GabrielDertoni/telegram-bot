@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b0ece3d344247ed1120e105d98fa1e37b7a92cfef9fa83a854741e0187ad38e3
+-- hash: 61b12f0ec1d2218781d4cc4a81786a9219848950d2613873eda91da20f668a17
 
 name:           telegram-bot
 version:        0.1.0.0
@@ -33,6 +33,7 @@ library
       Configuration.TelegramConfig
       Configuration.WolframConfig
       Controller.AskEntrypoint
+      Controller.InterpretBrainfuckEntrypoint
       Controller.SendMessage
       Controller.SetWebhook
       Dataproviders.AskDataprovider
@@ -51,10 +52,12 @@ library
       Helper.Telegram.WebHookInfo
       Helper.Wolfram
       Helper.Wolfram.APIResponse
+      Interface.Entrypoint
       Interface.GetAnswer
       Interface.ToMarkdown
       Lib
       UseCase.Ask
+      UseCase.InterpretBrainfuck
   other-modules:
       Paths_telegram_bot
   hs-source-dirs:
@@ -64,11 +67,14 @@ library
       aeson
     , async
     , base >=4.7 && <5
+    , brainfuck-haskell
     , dotenv
     , extra
     , http-conduit
     , http-types
     , scotty
+    , stm
+    , time
     , uri-encode
     , utf8-string
   default-language: Haskell2010
@@ -85,12 +91,15 @@ executable telegram-bot-exe
       aeson
     , async
     , base >=4.7 && <5
+    , brainfuck-haskell
     , dotenv
     , extra
     , http-conduit
     , http-types
     , scotty
+    , stm
     , telegram-bot
+    , time
     , uri-encode
     , utf8-string
   default-language: Haskell2010
@@ -108,12 +117,15 @@ test-suite telegram-bot-test
       aeson
     , async
     , base >=4.7 && <5
+    , brainfuck-haskell
     , dotenv
     , extra
     , http-conduit
     , http-types
     , scotty
+    , stm
     , telegram-bot
+    , time
     , uri-encode
     , utf8-string
   default-language: Haskell2010

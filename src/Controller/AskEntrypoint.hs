@@ -15,6 +15,7 @@ import qualified Entity.Question               as Q
 import qualified Entity.Message                as M
 import qualified Entity.Answer                 as A
 import qualified Controller.SendMessage        as Send
+import qualified Controller.InterpretBrainfuckEntrypoint as BF
 import qualified Interface.ToMarkdown          as I
 
 -- TODO: Change folder name from "Controller" to "Entrypoint"
@@ -31,20 +32,26 @@ mainEntrypoint = mapConcurrently_ (handle handleEntrypoint . assignEntrypoint)
 
 assignEntrypoint :: Telegram.Update -> IO ()
 assignEntrypoint update = case command of
-                            Just (cmd, after) -> do ansMsg <- callEntrypoint cmd after
+                            Just (cmd, after) -> do ansMsg <- callEntrypoint cmd after update
                                                     sendResponseMessage msg ansMsg
                             Nothing           -> putStrLn "No command on update..."
   where command = getCommand msg
         msg     = Telegram.message update
 
 getBotResponse :: Telegram.Update -> IO (Maybe Telegram.SendMessage)
-getBotResponse update = fmap (getReplyMessage msg) <$> sequence (uncurry callEntrypoint <$> command)
+getBotResponse update = case command of
+                          Nothing  -> return Nothing
+                          Just cmd -> do let (c, a) = cmd
+                                         ans <- callEntrypoint c a update
+                                         let rep = getReplyMessage msg ans
+                                         return $ Just rep
   where command = getCommand msg
         msg     = Telegram.message update
 
-callEntrypoint :: String -> String -> IO M.Message
-callEntrypoint command content
+callEntrypoint :: String -> String -> Telegram.Update -> IO M.Message
+callEntrypoint command content update
   | command == "/wolfram" = askEntrypoint content
+  | command == "/brainfuck" = BF.simpleBrainfuckEntrypoint content
   | command == "/start" = return M.helloMessage
   | otherwise = fail "Nenhum comando com esse nome..."
 
@@ -62,7 +69,8 @@ askEntrypoint text
                    return $ answerToMessage answer
 
 sendResponseMessage :: Telegram.Message -> M.Message -> IO ()
-sendResponseMessage msg = Send.sendMessage . getReplyMessage msg
+sendResponseMessage msg ans = do Send.sendMessage $ getReplyMessage msg ans
+                                 return ()
 
 getReplyMessage :: Telegram.Message -> M.Message -> Telegram.SendMessage
 getReplyMessage msg ans

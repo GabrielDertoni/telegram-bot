@@ -30,6 +30,7 @@ resolver: lts-16.8
 #   - wai
 packages:
 - .
+- ../brainfuck-haskell
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
@@ -54,3 +55,6 @@ packages:
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+# extra-deps:
+# - github: GabrielDertoni/brainfuck-haskell
+#   commit: master

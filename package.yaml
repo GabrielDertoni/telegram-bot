@@ -30,6 +30,9 @@ dependencies:
 - scotty
 - http-types
 - dotenv
+- time
+- stm
+- brainfuck-haskell
 
 default-extensions:
 - OverloadedStrings

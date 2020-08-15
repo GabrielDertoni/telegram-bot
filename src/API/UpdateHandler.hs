@@ -10,12 +10,18 @@ import qualified Configuration.TelegramConfig as Telegram
 import           Helper.Telegram.Types
 import           Controller.AskEntrypoint
 
+import qualified Controller.SendMessage as Send
+
 updateCallback :: Scotty.ActionM ()
 updateCallback = do
   req <- Scotty.body
   case decodeRequest req of
     Right update -> do msg <- liftIO $ getBotResponse update
-                       sequence_ (Scotty.json <$> msg)
+                       case msg of
+                         Nothing -> Scotty.text "true"
+                         Just m  -> do liftIO $ Send.sendMessage m
+                                       Scotty.text "true"
+
     Left err     -> fail err
 
 printCallback :: Scotty.ActionM ()

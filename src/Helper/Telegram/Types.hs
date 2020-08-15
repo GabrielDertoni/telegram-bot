@@ -61,17 +61,19 @@ data Message
               , chat :: Chat
               , text :: String
               , entities :: Maybe [MessageEntity]
+              , reply_to_message :: Maybe Message
               } deriving(Eq, Show)
 
 
 instance Aeson.FromJSON Message where
     parseJSON (Aeson.Object v) = do
-        message_id <- v .: "message_id"
-        from       <- v .: "from"
-        date       <- v .: "date"
-        chat       <- v .: "chat"
-        text       <- v .: "text"
+        message_id <- v .:  "message_id"
+        from       <- v .:  "from"
+        date       <- v .:  "date"
+        chat       <- v .:  "chat"
+        text       <- v .:  "text"
         entities   <- v .:? "entities"
+        rep_msg    <- v .:? "reply_to_message"
         return $
             Message { message_id = message_id
                  , from = from
@@ -79,6 +81,7 @@ instance Aeson.FromJSON Message where
                  , chat = chat
                  , text = text
                  , entities = entities
+                 , reply_to_message = rep_msg
                  }
 
 data Update

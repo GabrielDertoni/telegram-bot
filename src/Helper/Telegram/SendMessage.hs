@@ -3,15 +3,17 @@ module Helper.Telegram.SendMessage
   , simpleMessage
   , replyMessage
   , markdownReplyMessage
+  , getSentMessage
   ) where
 
 import           GHC.Generics (Generic)
-import           Data.Aeson ((.=))
-import qualified Data.Aeson as Aeson
-import qualified Network.URI.Encode as URI
+import           Data.Aeson ((.=), (.:))
+import qualified Data.Aeson            as Aeson
+import qualified Network.URI.Encode    as URI
 
 import           Helper.Query
-import qualified Helper.Telegram as Telegram
+import qualified Helper.Telegram       as Telegram
+import qualified Helper.Telegram.Types as Telegram
 
 -- TODO: Implement support for reply_markup
 
@@ -65,3 +67,16 @@ markdownReplyMessage cid markdown replyId
 
 showBool True = "true"
 showBool False = "false"
+
+data SendMessageResponse
+  = SendMessageResponse { sent_successfully :: Bool
+                        , sent_message :: Telegram.Message }
+  deriving (Eq, Show, Generic)
+
+instance Aeson.FromJSON SendMessageResponse where
+  parseJSON (Aeson.Object v) = do ok     <- v .: "ok"
+                                  result <- v .: "result"
+                                  return $ SendMessageResponse ok result
+
+getSentMessage :: SendMessageResponse -> Telegram.Message
+getSentMessage = sent_message

@@ -3,12 +3,14 @@ module Controller.SendMessage where
 import qualified Network.URI.Encode as URI
 import Network.HTTP.Conduit
 import Control.Exception
+import qualified Data.Aeson                   as Aeson
 
 import           Entity.Message
 import           Helper.Query
+import qualified Helper.Telegram.Types        as Telegram
 import qualified Helper.Telegram              as Telegram
-import           Helper.Telegram.SendPhoto    as Telegram
-import           Helper.Telegram.SendMessage  as Telegram
+import qualified Helper.Telegram.SendPhoto    as Telegram
+import qualified Helper.Telegram.SendMessage  as Telegram
 
 sendPhoto :: Telegram.SendPhoto -> IO ()
 sendPhoto msg = do
@@ -16,9 +18,12 @@ sendPhoto msg = do
   response <- simpleHttp $ url
   return ()
 
-sendMessage :: Telegram.SendMessage -> IO ()
+sendMessage :: Telegram.SendMessage -> IO Telegram.Message
 sendMessage msg = do
   url <- getURL msg
   putStrLn ("Send message URL: " <> url)
   response <- simpleHttp url
-  return ()
+  case Aeson.decode response of
+    Nothing  -> do print response
+                   fail "No message in response"
+    Just msg -> return $ Telegram.getSentMessage msg

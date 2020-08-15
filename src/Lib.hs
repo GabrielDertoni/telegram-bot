@@ -41,7 +41,8 @@ run = do
     -- Will try to load the environment variables from .env file
     -- if no such file is found, it will do nothing and may fail later.
     onMissingFile (loadFile defaultConfig) $ return []
-    setWebhook <$> Telegram.simpleWebhook <$> Telegram.getWebhookURL
+    webhookURL <- Telegram.getWebhookURL
+    setWebhook $ Telegram.simpleWebhook webhookURL
     port <- catch (getEnv "PORT") useDefaultPort
     updateHandler  <- getUpdateHandler
     getDataHandler <- getGetDataHandler
