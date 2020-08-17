@@ -43,7 +43,7 @@ waitForResponseToOneOf msgs chan
   = do update <- atomically $ readTChan chan
        case Telegram.reply_to_message $ Telegram.message $ update of
          Nothing       -> waitForResponseToOneOf msgs chan
-         Just repl_msg -> if repl_msg `elem` msgs
+         Just repl_msg -> if Telegram.getMessageIdentifier repl_msg `elem` map Telegram.getMessageIdentifier msgs
                             then return $ Telegram.message update
                             else waitForResponseToOneOf msgs chan
 

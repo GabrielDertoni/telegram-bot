@@ -70,6 +70,9 @@ getMessageID = message_id
 getMessageChatID :: Message -> Int
 getMessageChatID = chat_id . chat
 
+getMessageIdentifier :: Message -> (Int, Int)
+getMessageIdentifier msg = (getMessageChatID msg, getMessageID msg)
+
 instance Aeson.FromJSON Message where
     parseJSON (Aeson.Object v) = do
         message_id <- v .:  "message_id"
