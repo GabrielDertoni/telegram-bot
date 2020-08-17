@@ -12,3 +12,6 @@ class Query a where
 
 (<=>) :: String -> String -> String
 (<=>) a b = a <> "=" <> b
+
+fromPairs :: [(String, String)] -> String
+fromPairs = foldr (<:>) "" . map (uncurry (<=>)) . filter ((/= 0) . length . snd)

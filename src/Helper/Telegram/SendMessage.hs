@@ -68,15 +68,7 @@ markdownReplyMessage cid markdown replyId
 showBool True = "true"
 showBool False = "false"
 
-data SendMessageResponse
-  = SendMessageResponse { sent_successfully :: Bool
-                        , sent_message :: Telegram.Message }
-  deriving (Eq, Show, Generic)
-
-instance Aeson.FromJSON SendMessageResponse where
-  parseJSON (Aeson.Object v) = do ok     <- v .: "ok"
-                                  result <- v .: "result"
-                                  return $ SendMessageResponse ok result
+type SendMessageResponse = Telegram.ResponseWrapper Telegram.Message
 
 getSentMessage :: SendMessageResponse -> Telegram.Message
-getSentMessage = sent_message
+getSentMessage = Telegram.result

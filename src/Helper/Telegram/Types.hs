@@ -99,21 +99,7 @@ instance Aeson.FromJSON Update where
                    , message = message
                    }
 
-
-data GetUpdatesResponse
-    = GetUpdatesResponse { ok :: Bool
-                         , results :: [Update]
-                         }
-    deriving(Eq, Show, Generic)
-
-instance Aeson.FromJSON GetUpdatesResponse where
-    parseJSON (Aeson.Object v) = do
-        ok      <- v .: "ok"
-        results <- v .: "result"
-        return $
-            GetUpdatesResponse { ok = ok
-                               , results = results
-                               }
+type GetUpdatesResponse = ResponseWrapper [Update]
 
 -- TODO: Finish implementation
 
@@ -121,3 +107,8 @@ data WebHookInfo
   = WebHookInfo { url :: String
                 }
   deriving (Eq, Show, Generic, Aeson.ToJSON, Aeson.FromJSON)
+
+data ResponseWrapper a = ResponseWrapper { ok :: Bool
+                                         , result :: a
+                                         }
+  deriving (Eq, Show, Generic, Aeson.FromJSON)

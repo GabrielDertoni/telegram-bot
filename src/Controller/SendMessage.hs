@@ -24,6 +24,14 @@ sendMessage msg = do
   putStrLn ("Send message URL: " <> url)
   response <- simpleHttp url
   case Aeson.decode response of
-    Nothing  -> do print response
-                   fail "No message in response"
+    Nothing  -> fail "No message in response"
     Just msg -> return $ Telegram.getSentMessage msg
+
+telegramRequest :: (Query a, Aeson.FromJSON b) => a -> IO b
+telegramRequest q = do
+  url <- getURL q
+  putStrLn ("Makin request to URL: " <> url)
+  response <- simpleHttp url
+  case Aeson.decode response of
+    Nothing  -> fail "Nothing in response." 
+    Just res -> return $ Telegram.result res

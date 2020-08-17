@@ -6,7 +6,10 @@ import qualified Data.Aeson                    as Aeson
 import           Control.Concurrent.Async
 import           Control.Exception
 import           Text.Printf
+import qualified Control.Concurrent.STM        as STM
+import qualified Control.Concurrent.STM.TChan  as STM
 
+import qualified Helper.Telegram               as Telegram (getCommand)
 import qualified Helper.Telegram.Types         as Telegram
 import qualified Helper.Telegram.SendMessage   as Telegram (markdownReplyMessage, replyMessage, SendMessage)
 import           UseCase.Ask
@@ -24,7 +27,7 @@ instance I.ToMarkdown M.Message where
   markdown (M.ImageMessage img [] ) = printf "[image](%s)" img
   markdown (M.ImageMessage img cap) = printf "[%s](%s)" cap img
   markdown (M.TextMessage  text   ) = text
-
+{-
 mainEntrypoint :: [Telegram.Update] -> IO ()
 mainEntrypoint = mapConcurrently_ (handle handleEntrypoint . assignEntrypoint)
   where handleEntrypoint :: IOException -> IO ()
@@ -37,23 +40,24 @@ assignEntrypoint update = case command of
                             Nothing           -> putStrLn "No command on update..."
   where command = getCommand msg
         msg     = Telegram.message update
-
-getBotResponse :: Telegram.Update -> IO (Maybe Telegram.SendMessage)
-getBotResponse update = case command of
-                          Nothing  -> return Nothing
-                          Just cmd -> do let (c, a) = cmd
-                                         ans <- callEntrypoint c a update
-                                         let rep = getReplyMessage msg ans
-                                         return $ Just rep
-  where command = getCommand msg
+-}
+getBotResponse :: Telegram.Update -> STM.TChan Telegram.Update -> IO (Maybe Telegram.SendMessage)
+getBotResponse update broadChan
+  = case command of
+      Nothing  -> return Nothing
+      Just cmd -> do let (c, a) = cmd
+                     ans <- callEntrypoint c a update broadChan
+                     let rep = getReplyMessage msg <$> ans
+                     return rep
+  where command = Telegram.getCommand msg
         msg     = Telegram.message update
 
-callEntrypoint :: String -> String -> Telegram.Update -> IO M.Message
-callEntrypoint command content update
-  | command == "/wolfram" = askEntrypoint content
-  | command == "/brainfuck" = BF.simpleBrainfuckEntrypoint content
-  | command == "/start" = return M.helloMessage
-  | otherwise = fail "Nenhum comando com esse nome..."
+callEntrypoint :: String -> String -> Telegram.Update -> STM.TChan Telegram.Update -> IO (Maybe M.Message)
+callEntrypoint command content update broadChan
+  | command == "/wolfram" = Just <$> askEntrypoint content
+  | command == "/brainfuck" = Just <$> BF.brainfuckEntrypoint content update broadChan
+  | command == "/start" = return $ Just M.helloMessage
+  | otherwise = return Nothing
 
 answerToMessage :: A.Answer -> M.Message
 answerToMessage ans
@@ -80,12 +84,3 @@ getReplyMessage msg ans
   where cid  = Telegram.chat_id chat
         mid  = Telegram.message_id msg
         chat = Telegram.chat msg
-
-getCommand :: Telegram.Message -> Maybe (String, String)
-getCommand msg = do entity <- head <$> Telegram.entities msg
-                    let text    = Telegram.text msg
-                    let len     = Telegram.entity_length entity
-                    let off     = Telegram.entity_offset entity
-                    let after   = drop (len + off) text
-                    let command = take len $ drop off text
-                    return (command, after)

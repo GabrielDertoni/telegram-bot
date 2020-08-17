@@ -1,4 +1,7 @@
 module Configuration.HerokuConfig where
 
+import System.Environment
+
+projectURL :: IO String
 -- projectURL = "https://wolfram-telegram-bot.herokuapp.com/"
-projectURL = "https://075bf700f0d9.ngrok.io/"
+projectURL = getEnv "PROJECT_URL"
