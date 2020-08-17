@@ -14,3 +14,8 @@ The project is an attempt to implement clean architecture which gives it more fl
    TELEGRAM_API_KEY=<telegram api key>
    WOLFRAM_APP_ID=<wolfram app id>
    ```
+
+## TODO
+- Make the application more use case driven by moving code to that section.
+- Rethink entities and their behaviours.
+- Define better the meaning of an interface in this context.
