@@ -3,7 +3,18 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    size: 14674
+    url: https://github.com/GabrielDertoni/brainfuck-haskell/archive/master.tar.gz
+    name: brainfuck-haskell
+    version: 0.1.0.0
+    sha256: b0ba31d942090fb9d1e8b3fa6b4ff41714bca503ec25c09dda334351096dddcb
+    pantry-tree:
+      size: 1408
+      sha256: 252aa7800b428eb3cc0629b0386736cec669da672ea6ff8fb27ffd9bcd3ce95e
+  original:
+    url: https://github.com/GabrielDertoni/brainfuck-haskell/archive/master.tar.gz
 snapshots:
 - completed:
     size: 532379
