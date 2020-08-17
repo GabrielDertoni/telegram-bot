@@ -1,16 +1,18 @@
 module Helper.Telegram.EditMessageText
   ( EditMessageText
   , editMessageText
+  , getEditedMessage
   ) where
 
 import           GHC.Generics (Generic)
 import           Data.Aeson ((.=))
-import qualified Data.Aeson         as Aeson
-import qualified Network.URI.Encode as URI
+import qualified Data.Aeson            as Aeson
+import qualified Network.URI.Encode    as URI
 
 import           Helper.Query
 import           Helper.Maybe ((??))
-import qualified Helper.Telegram    as Telegram
+import qualified Helper.Telegram       as Telegram
+import qualified Helper.Telegram.Types as Telegram
 
 data EditMessageText
   = EditMessageText { chat_id :: Int
@@ -37,5 +39,10 @@ editMessageQuery edit = fromPairs [ ("chat_id"   , show $ chat_id           edit
                                   , ("parse_mode", parse_mode edit ?? "")
                                   ]
 
-editMessageText :: Int -> Int -> String -> EditMessageText
-editMessageText cid mid text = EditMessageText cid mid text Nothing
+editMessageText :: Telegram.Message -> String -> EditMessageText
+editMessageText msg text = EditMessageText (Telegram.getMessageChatID msg) (Telegram.getMessageID msg) text Nothing
+
+type EditMessageTextResponse = Telegram.ResponseWrapper Telegram.Message
+
+getEditedMessage :: EditMessageTextResponse -> Telegram.Message
+getEditedMessage = Telegram.result

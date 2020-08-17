@@ -4,5 +4,5 @@
 # Secret/
 Makefile
 **/data.json
-**/.env
+**/.env**
 dist-newstyle/

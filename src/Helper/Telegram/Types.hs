@@ -64,6 +64,11 @@ data Message
               , reply_to_message :: Maybe Message
               } deriving(Eq, Show)
 
+getMessageID :: Message -> Int
+getMessageID = message_id
+
+getMessageChatID :: Message -> Int
+getMessageChatID = chat_id . chat
 
 instance Aeson.FromJSON Message where
     parseJSON (Aeson.Object v) = do

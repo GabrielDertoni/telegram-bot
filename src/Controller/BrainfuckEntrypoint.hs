@@ -1,4 +1,4 @@
-module Controller.InterpretBrainfuckEntrypoint where
+module Controller.BrainfuckEntrypoint where
 
 import Data.Time
 import Data.Maybe
@@ -20,8 +20,8 @@ import qualified Helper.Telegram.Types           as Telegram
 import qualified Helper.Telegram.SendMessage     as Send
 import qualified Helper.Telegram.EditMessageText as Edit
 import qualified Controller.SendMessage          as Send
-import qualified Interface.Entrypoint            as I
 import           Helper.Maybe ((??))
+import           Interface.Entrypoint
 
 readFromChannel :: TChan Telegram.Update -> IO String
 readFromChannel chan
@@ -34,103 +34,70 @@ sendInputRequestMessage cid
 
 waitForResponseTo :: Int -> Int -> TChan Telegram.Update -> IO Telegram.Message
 waitForResponseTo cid mid chan
-  = do putStrLn $ "Waiting for response to " <> show mid
-       update <- atomically $ readTChan chan
+  = do update <- atomically $ readTChan chan
        let msg = Telegram.message update
        let may_rpl_msg = Telegram.reply_to_message $ Telegram.message $ update
        case may_rpl_msg of
-         Nothing       -> do putStrLn "Message is not responding to another message"
-                             waitForResponseTo cid mid chan
+         Nothing       -> do waitForResponseTo cid mid chan
          Just repl_msg -> if Telegram.message_id repl_msg == mid
-                            then do
-                              putStrLn "Found my response :)"
-                              return msg
-                            else do
-                              putStrLn $ "Found reply to " <> show (Telegram.message_id repl_msg) <> " but was searching for reply to " <> show mid
-                              waitForResponseTo cid mid chan
+                            then return msg
+                            else waitForResponseTo cid mid chan
 
-waitForResponseToOneOf :: Int -> [Int] -> TChan Telegram.Update -> IO Telegram.Message
-waitForResponseToOneOf cid mids chan
+waitForResponseToOneOf :: [Telegram.Message] -> TChan Telegram.Update -> IO Telegram.Message
+waitForResponseToOneOf msgs chan
   = do update <- atomically $ readTChan chan
        case Telegram.reply_to_message $ Telegram.message $ update of
-         Nothing       -> waitForResponseToOneOf cid mids chan
-         Just repl_msg -> if Telegram.message_id repl_msg `elem` mids
+         Nothing       -> waitForResponseToOneOf msgs chan
+         Just repl_msg -> if repl_msg `elem` msgs
                             then return $ Telegram.message update
-                            else waitForResponseToOneOf cid mids chan
+                            else waitForResponseToOneOf msgs chan
 
 getContentFromWaitResponse :: Int -> Int -> TChan Telegram.Update -> IO String
 getContentFromWaitResponse cid mid chan
   = do msg <- waitForResponseTo cid mid chan
        return $ Telegram.text msg
 
-readFn :: Int -> Int -> TChan Telegram.Update -> TVar [Telegram.Message] -> IO String
-readFn cid prog_mid chan last_msgs
+readFn :: Telegram.Message -> Telegram.Message -> TChan Telegram.Update -> TVar [Telegram.Message] -> IO String
+readFn edit_msg prog_msg chan last_msgs
   = do maybe_msg <- atomically $ readTVar last_msgs
        msg <- case maybe_msg of
-                []       -> do inp_msg <- sendInputRequestMessage cid
+                []       -> do inp_msg <- Send.editSimpleMessage edit_msg "(input required)"
                                atomically $ modifyTVar last_msgs (\lst -> inp_msg:lst)
-                               waitForResponseToOneOf cid [Telegram.message_id inp_msg] chan
+                               waitForResponseToOneOf [inp_msg] chan
 
-                inp_msgs -> waitForResponseToOneOf cid (Telegram.message_id <$> inp_msgs) chan
+                inp_msgs -> waitForResponseToOneOf inp_msgs chan
        
        atomically $ modifyTVar last_msgs (\lst -> msg:lst)
        let content = Telegram.text msg
        when (content == "/kill") $ fail "Program terminated by user"
        return content
 
-writeFn :: Int -> Int -> TChan Telegram.Update -> TVar [Telegram.Message] -> String -> IO ()
-writeFn cid prog_mid chan last_msgs out
+writeFn :: Telegram.Message -> Telegram.Message -> TChan Telegram.Update -> TVar [Telegram.Message] -> String -> IO ()
+writeFn edit_msg prog_msg chan last_msgs out
   = do mid <- atomically $ getMayMid
-       msg <- Send.sendMessage $ Send.replyMessage cid out (mid ?? prog_mid)
+       let cid = Telegram.getMessageChatID prog_msg
+       let prog_mid = Telegram.getMessageID prog_msg
+       msg <- Send.sendMessage $ Send.replyMessage cid out $ mid ?? prog_mid
        atomically $ modifyTVar last_msgs (\lst -> msg:lst)
   where getMayMid :: STM (Maybe Int)
         getMayMid = do val <- readTVar last_msgs
                        return $ Telegram.message_id <$> listToMaybe val
 
-customSystem :: Int -> Int -> TChan Telegram.Update -> TChan Telegram.Update -> TVar [Telegram.Message] -> IO System
-customSystem cid prog_mid ichan ochan last_msgs
+customSystem :: Telegram.Message -> Telegram.Message -> TChan Telegram.Update -> TChan Telegram.Update -> TVar [Telegram.Message] -> IO System
+customSystem edit_msg prog_msg ichan ochan last_msgs
   = do ds <- defaultSystem
-       return ds { read_fn  = readFn  cid prog_mid ochan last_msgs
-                 , write_fn = writeFn cid prog_mid ichan last_msgs
+       return ds { read_fn  = readFn  edit_msg prog_msg ochan last_msgs
+                 , write_fn = writeFn edit_msg prog_msg ichan last_msgs
                  }
 
-customEnvironment :: Int -> Int -> TChan Telegram.Update -> TVar [Telegram.Message] -> IO Environment
-customEnvironment cid prog_mid chan last_msgs
+customEnvironment :: Telegram.Message -> Telegram.Message -> TChan Telegram.Update -> TVar [Telegram.Message] -> IO Env
+customEnvironment edit_msg prog_msg chan last_msgs
   = do ichan <- atomically $ dupTChan chan
        ochan <- atomically $ dupTChan chan
-       sys   <- customSystem cid prog_mid ichan ochan last_msgs
+       sys   <- customSystem edit_msg prog_msg ichan ochan last_msgs
        env   <- defaultEnv
        return env { system = sys }
-
-simpleSystem :: TVar String -> IO System
-simpleSystem tvar = do ds <- defaultSystem
-                       return ds { read_fn = return "a"
-                                 , write_fn = \str -> atomically $ modifyTVar tvar (++ str)
-                                 }
-
-simpleEnv :: TVar String -> IO Environment
-simpleEnv tvar = do sys <- simpleSystem tvar
-                    env <- defaultEnv
-                    return env { system = sys }
-
-simpleBrainfuckEntrypoint :: I.BotEntrypoint
-simpleBrainfuckEntrypoint program
-  = do case parseInstructions program of
-        Left err        -> return $ M.simpleMessage err
-        Right instructs -> runBF instructs
-
-  where runBF :: [Instruction] -> IO M.Message
-        runBF instructs = do
-          tvar <- atomically $ newTVar ""
-          env <- simpleEnv tvar
-          res <- execute (interpret instructs) env
-          case res of
-            Left err     -> return $ M.simpleMessage err
-            Right (_, _) -> do out <- atomically $ readTVar tvar
-                               if length out == 0
-                                 then return $ M.simpleMessage "(no output)"
-                                 else return $ M.simpleMessage out 
-
+{-
 brainfuckEntrypoint :: String -> Telegram.Update -> TChan Telegram.Update -> IO M.Message
 brainfuckEntrypoint program update broadChan
   = do case parseInstructions program of
@@ -141,8 +108,7 @@ brainfuckEntrypoint program update broadChan
   
   where runBF :: Telegram.Message -> [Instruction] -> IO ()
         runBF msg inst = do
-          let cid = Telegram.chat_id $ Telegram.chat msg
-          let mid = Telegram.message_id msg
+          let (cid, mid) = getMessageCIDMID msg
           last_msgs <- atomically $ newTVar []
           env       <- customEnvironment cid mid broadChan last_msgs
           res       <- execute (interpret inst) env
@@ -151,4 +117,27 @@ brainfuckEntrypoint program update broadChan
             Right (_, _) -> Send.sendMessage $ Send.replyMessage cid "Finished execution" mid
           
           return ()
+-}
+brainfuckCommand :: EntrypointM ()
+brainfuckCommand = command "/brainfuck" $ do
+  update  <- getCallerUpdate
+  chan    <- getUpdateChannel
+  program <- getContentAfterCommand
+  msg <- getCallerMessage
+  case parseInstructions program of
+    Left err   -> do liftIO $ Send.sendSimpleReplyTo msg err ; return Nothing
+    Right []   -> do liftIO $ Send.sendSimpleReplyTo msg "No instructions in program." ; return Nothing
+    Right inst -> do replMsg <- liftIO $ Send.sendSimpleReplyTo msg "Executing your code..."
+                     liftIO $ forkIO $ runBF replMsg chan msg inst
+                     return Nothing
+
+  where runBF :: Telegram.Message -> TChan Telegram.Update -> Telegram.Message -> [Instruction] -> IO ()
+        runBF edit_msg chan msg inst = do
+          last_msgs <- atomically $ newTVar []
+          env       <- customEnvironment edit_msg msg chan last_msgs
+          res       <- execute (interpret inst) env
+          case res of
+            Left err     -> Send.editSimpleMessage edit_msg $ "Error(s):\n" <> err
+            Right (_, _) -> Send.editSimpleMessage edit_msg "Finished execution"
           
+          return ()

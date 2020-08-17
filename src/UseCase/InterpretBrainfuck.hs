@@ -10,13 +10,14 @@ import Control.Concurrent.STM.TVar
 -- import           InterpretBrainfuck.Types
 import           Brainfuck.Execution
 import           Brainfuck.ProtoOS
+import           Brainfuck.Instructions
 import qualified Entity.Message        as M
 import qualified Helper.Telegram.Types as Telegram
 import qualified Helper.Telegram.SendMessage as Send
 import qualified Controller.SendMessage as Send
-import qualified Controller.InterpretBrainfuckEntrypoint as BF
+import qualified Controller.BrainfuckEntrypoint as BF
 
-interpret :: ExecuteM () -> IO M.Message
+interpret :: ExecuteM IntMapMemory () -> IO M.Message
 interpret program = do
   env <- defaultEnv
   res <- execute program env

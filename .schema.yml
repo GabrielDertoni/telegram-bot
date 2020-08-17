@@ -1,3 +1,6 @@
+- name: PROJECT_URL
+  type: text
+  required: true
 - name: TELEGRAM_API_KEY
   type: text
   required: true

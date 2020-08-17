@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6c225fc48d32bc0669d54ee1a7b946178df3a7ca78a57430af40edfcc1ea7cba
+-- hash: 77ca4417069718675f7219d76da342f0e8252d71237e71c89991a3091a7ab449
 
 name:           telegram-bot
 version:        0.1.0.0
@@ -33,7 +33,7 @@ library
       Configuration.TelegramConfig
       Configuration.WolframConfig
       Controller.AskEntrypoint
-      Controller.InterpretBrainfuckEntrypoint
+      Controller.BrainfuckEntrypoint
       Controller.SendMessage
       Controller.SetWebhook
       Dataproviders.AskDataprovider

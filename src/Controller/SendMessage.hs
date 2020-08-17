@@ -1,31 +1,66 @@
 module Controller.SendMessage where
 
-import qualified Network.URI.Encode as URI
-import Network.HTTP.Conduit
-import Control.Exception
-import qualified Data.Aeson                   as Aeson
+import           Network.HTTP.Conduit
+import           Control.Exception
+import           Text.Printf
+import qualified Data.Aeson                      as Aeson
+import qualified Network.URI.Encode              as URI
 
 import           Entity.Message
 import           Helper.Query
-import qualified Helper.Telegram.Types        as Telegram
-import qualified Helper.Telegram              as Telegram
-import qualified Helper.Telegram.SendPhoto    as Telegram
-import qualified Helper.Telegram.SendMessage  as Telegram
+import qualified Helper.Telegram.Types           as Telegram
+import qualified Helper.Telegram                 as Telegram
+import qualified Helper.Telegram.SendPhoto       as Method
+import qualified Helper.Telegram.SendMessage     as Method
+import qualified Helper.Telegram.EditMessageText as Method
+import qualified Interface.ToMarkdown            as I
 
-sendPhoto :: Telegram.SendPhoto -> IO ()
+instance I.ToMarkdown Message where
+  markdown (ImageMessage [] img ) = printf "[image](%s)" img
+  markdown (ImageMessage cap img) = printf "[%s](%s)" cap img
+  markdown (TextMessage  text   ) = text
+
+sendPhoto :: Method.SendPhoto -> IO ()
 sendPhoto msg = do
   url <- getURL msg
   response <- simpleHttp $ url
   return ()
 
-sendMessage :: Telegram.SendMessage -> IO Telegram.Message
+sendMessage :: Method.SendMessage -> IO Telegram.Message
 sendMessage msg = do
   url <- getURL msg
   putStrLn ("Send message URL: " <> url)
   response <- simpleHttp url
   case Aeson.decode response of
-    Nothing  -> fail "No message in response"
-    Just msg -> return $ Telegram.getSentMessage msg
+    Nothing   -> fail "No message in response"
+    Just resp -> return $ Method.getSentMessage resp
+
+editMessageText :: Method.EditMessageText -> IO Telegram.Message
+editMessageText edit = do
+  url <- getURL edit
+  putStrLn ("Edit message URL: " <> url)
+  response <- simpleHttp url
+  case Aeson.decode response of
+    Nothing   -> fail "No message in response"
+    Just resp -> return $ Method.getEditedMessage resp
+
+getReplyMessage :: Telegram.Message -> Message -> Method.SendMessage
+getReplyMessage msg ans
+  = case ans of
+      TextMessage  text    -> Method.replyMessage cid text mid
+      ImageMessage img cap -> Method.markdownReplyMessage cid (I.markdown ans) mid
+  where cid  = Telegram.chat_id chat
+        mid  = Telegram.message_id msg
+        chat = Telegram.chat msg
+
+sendReplyTo :: Telegram.Message -> Message -> IO Telegram.Message
+sendReplyTo msg = sendMessage . (getReplyMessage msg)
+
+sendSimpleReplyTo :: Telegram.Message -> String -> IO Telegram.Message
+sendSimpleReplyTo msg = (sendReplyTo msg) . simpleMessage
+
+editSimpleMessage :: Telegram.Message -> String -> IO Telegram.Message
+editSimpleMessage msg = editMessageText . (Method.editMessageText msg)
 
 telegramRequest :: (Query a, Aeson.FromJSON b) => a -> IO b
 telegramRequest q = do
