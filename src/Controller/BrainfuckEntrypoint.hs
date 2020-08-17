@@ -10,7 +10,6 @@ import Control.Concurrent.STM.TVar
 import Control.Monad (when)
 import Control.Monad.IO.Class
 
--- import           InterpretBrainfuck.Types
 import           Brainfuck.Execution
 import           Brainfuck.ProtoOS
 import           Brainfuck.Compiler
@@ -27,10 +26,6 @@ readFromChannel :: TChan Telegram.Update -> IO String
 readFromChannel chan
   = do update <- atomically $ readTChan chan
        return $ Telegram.text $ Telegram.message update
-
-sendInputRequestMessage :: Int -> IO Telegram.Message
-sendInputRequestMessage cid
-  = Send.sendMessage $ Send.simpleMessage cid "(input required)"
 
 waitForResponseTo :: Int -> Int -> TChan Telegram.Update -> IO Telegram.Message
 waitForResponseTo cid mid chan
@@ -88,6 +83,7 @@ customSystem edit_msg prog_msg ichan ochan last_msgs
   = do ds <- defaultSystem
        return ds { read_fn  = readFn  edit_msg prog_msg ochan last_msgs
                  , write_fn = writeFn edit_msg prog_msg ichan last_msgs
+                 , time_limit = 60
                  }
 
 customEnvironment :: Telegram.Message -> Telegram.Message -> TChan Telegram.Update -> TVar [Telegram.Message] -> IO Env
@@ -97,27 +93,7 @@ customEnvironment edit_msg prog_msg chan last_msgs
        sys   <- customSystem edit_msg prog_msg ichan ochan last_msgs
        env   <- defaultEnv
        return env { system = sys }
-{-
-brainfuckEntrypoint :: String -> Telegram.Update -> TChan Telegram.Update -> IO M.Message
-brainfuckEntrypoint program update broadChan
-  = do case parseInstructions program of
-        Left err   -> return $ M.simpleMessage err
-        Right []   -> return $ M.simpleMessage "No instructions in program"
-        Right inst -> do forkIO $ runBF (Telegram.message update) inst
-                         return $ M.simpleMessage $ "Executing code. PID: " <> (show $ Telegram.message_id $ Telegram.message update)
-  
-  where runBF :: Telegram.Message -> [Instruction] -> IO ()
-        runBF msg inst = do
-          let (cid, mid) = getMessageCIDMID msg
-          last_msgs <- atomically $ newTVar []
-          env       <- customEnvironment cid mid broadChan last_msgs
-          res       <- execute (interpret inst) env
-          case res of
-            Left err     -> Send.sendMessage $ Send.replyMessage cid ("Error(s):\n" <> err) mid
-            Right (_, _) -> Send.sendMessage $ Send.replyMessage cid "Finished execution" mid
-          
-          return ()
--}
+
 brainfuckCommand :: EntrypointM ()
 brainfuckCommand = command "/brainfuck" $ do
   update  <- getCallerUpdate
