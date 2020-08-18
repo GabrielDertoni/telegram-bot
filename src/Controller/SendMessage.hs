@@ -6,6 +6,7 @@ import           Text.Printf
 import qualified Data.Aeson                      as Aeson
 import qualified Network.URI.Encode              as URI
 
+import qualified Dataproviders.Logger            as Logger
 import           Entity.Message
 import           Helper.Query
 import qualified Helper.Telegram.Types           as Telegram
@@ -29,7 +30,7 @@ sendPhoto msg = do
 sendMessage :: Method.SendMessage -> IO Telegram.Message
 sendMessage msg = do
   url <- getURL msg
-  putStrLn ("Send message URL: " <> url)
+  Logger.log $ "Send message URL: " <> url
   response <- simpleHttp url
   case Aeson.decode response of
     Nothing   -> fail "No message in response"
@@ -38,7 +39,7 @@ sendMessage msg = do
 editMessageText :: Method.EditMessageText -> IO Telegram.Message
 editMessageText edit = do
   url <- getURL edit
-  putStrLn ("Edit message URL: " <> url)
+  Logger.log ("Edit message URL: " <> url)
   response <- simpleHttp url
   case Aeson.decode response of
     Nothing   -> fail "No message in response"
@@ -65,7 +66,7 @@ editSimpleMessage msg = editMessageText . (Method.editMessageText msg)
 telegramRequest :: (Query a, Aeson.FromJSON b) => a -> IO b
 telegramRequest q = do
   url <- getURL q
-  putStrLn ("Makin request to URL: " <> url)
+  Logger.log ("Makin request to URL: " <> url)
   response <- simpleHttp url
   case Aeson.decode response of
     Nothing  -> fail "Nothing in response." 

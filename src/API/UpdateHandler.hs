@@ -1,13 +1,15 @@
 module API.UpdateHandler where
 
+import           Text.Printf
 import           Control.Exception
-import qualified Web.Scotty as Scotty
-import qualified Data.Aeson as Aeson
+import qualified Web.Scotty                   as Scotty
+import qualified Data.Aeson                   as Aeson
 import           Control.Monad.IO.Class
-import qualified Control.Concurrent.STM as STM
+import qualified Control.Concurrent.STM       as STM
 import qualified Control.Concurrent.STM.TChan as STM
-import           Data.ByteString.Lazy.UTF8 (ByteString)
+import           Data.ByteString.Lazy.UTF8 (ByteString, toString)
 
+import qualified Dataproviders.Logger          as Logger
 import           Interface.Entrypoint
 import qualified Configuration.TelegramConfig as Telegram
 import qualified Helper.Telegram.Types        as Telegram
@@ -42,7 +44,8 @@ updateCallback broadChan = do
                        liftIO $ sequenceEntrypoints allEntrypoints (update, broadChan)
                        Scotty.text "true"
 
-    Left err     -> fail err
+    Left err     -> do liftIO $ Logger.log $ printf "Failed with error: %s\nwhile parsing:\n%s" err $ toString req
+                       Scotty.text "true"
 
 decodeRequest :: ByteString -> Either String Telegram.Update
 decodeRequest = Aeson.eitherDecode

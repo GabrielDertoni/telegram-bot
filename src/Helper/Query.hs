@@ -1,5 +1,7 @@
 module Helper.Query where
 
+import Data.List
+
 class Query a where
   getURL :: a -> IO String
 
@@ -14,4 +16,4 @@ class Query a where
 (<=>) a b = a <> "=" <> b
 
 fromPairs :: [(String, String)] -> String
-fromPairs = foldr (<:>) "" . map (uncurry (<=>)) . filter ((/= 0) . length . snd)
+fromPairs = intercalate "&" . map (uncurry (<=>)) . filter ((/= 0) . length . snd)

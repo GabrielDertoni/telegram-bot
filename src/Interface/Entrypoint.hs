@@ -1,11 +1,13 @@
 module Interface.Entrypoint where
 
+import           Data.List
 import           GHC.Base (ap)
 import           Control.Monad (when)
 import           Control.Monad.IO.Class
 import qualified Control.Concurrent.STM       as STM
 import qualified Control.Concurrent.STM.TChan as STM
 
+import qualified Dataproviders.Logger         as Logger
 import qualified Entity.Question              as Q
 import qualified Entity.Message               as M
 import qualified Entity.Answer                as A
@@ -65,11 +67,11 @@ command cmd action = EntrypointM $
     case Telegram.getCommand msg of
       Nothing -> return ()
       Just (command, content) ->
-        when (cmd == command) $ do
+        when (cmd `isPrefixOf` command) $ do
           chan' <- STM.atomically $ STM.dupTChan chan
           res   <- act action (content, up, chan')
           case res of
-            Left err   -> do putStrLn $ "An error occurred while performing an action: " <> err
+            Left err   -> do Logger.log $ "An error occurred while performing an action: " <> err
                              Send.sendReplyTo msg $ M.simpleMessage "Erro ao interpretar comando."
                              return ()
             Right mMsg -> sequence_ $ (Send.sendReplyTo msg) <$> mMsg

@@ -9,6 +9,7 @@ import           Network.HTTP.Conduit
 import           Data.Maybe
 import           Control.Exception
 
+import qualified Dataproviders.Logger        as Logger
 import qualified Entity.Question             as Q
 import qualified Entity.Answer               as A
 import qualified Configuration.WolframConfig as API
@@ -29,7 +30,7 @@ instance GetAnswer AskWolfram where
     = flip catch handleResponseException $
         do url <- getURL dataprov
            let urlQuery = url <:> ("input" <=> URI.encode str)
-           putStrLn ("Querying: " ++ urlQuery)
+           Logger.log ("Querying: " ++ urlQuery)
            response <- simpleHttp urlQuery
            case Aeson.eitherDecode response of
              Right result -> processResponse result
@@ -69,7 +70,7 @@ processResponse response
 
 handleResponseException :: IOException -> IO A.Answer
 handleResponseException exception
-  = do print exception
+  = do Logger.log $ show exception
        return A.Answer { A.text  = "Failed to fetch answer from the Wolfram API...\nMaybe try a different question."
                        , A.image = Nothing
                        }
