@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7778b3714a65b2d4d5d9a39f99bd952d38512712f6654dda906be325edafa8f5
+-- hash: e2006975308dd7d2d2358a56c0a34f3df0263ab6bfbc4f8249fa5b4ddb889773
 
 name:           telegram-bot
 version:        0.1.0.0
@@ -19,7 +19,6 @@ license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
-    ChangeLog.md
 
 source-repository head
   type: git
@@ -31,17 +30,20 @@ library
       API.GetLogsHandler
       API.UpdateHandler
       Configuration.AppConfig
+      Configuration.GlobalConfig
       Configuration.HerokuConfig
       Configuration.TelegramConfig
       Configuration.WolframConfig
-      Controller.AskEntrypoint
-      Controller.BrainfuckEntrypoint
       Controller.SendMessage
       Controller.SetWebhook
-      Dataproviders.AskDataprovider
-      Dataproviders.BotInfo
+      Dataproviders.BotInfoDataprovider
+      Dataproviders.FunfactDataprovider
+      Dataproviders.IDKDataprovider
       Dataproviders.Logger
+      Dataproviders.WolframDataprovider
       Entity.Answer
+      Entity.BotInfo
+      Entity.Command
       Entity.Message
       Entity.Question
       Helper.Maybe
@@ -49,6 +51,7 @@ library
       Helper.Telegram
       Helper.Telegram.EditMessageText
       Helper.Telegram.GetUpdates
+      Helper.Telegram.Methods
       Helper.Telegram.SendMessage
       Helper.Telegram.SendPhoto
       Helper.Telegram.SetWebhook
@@ -56,12 +59,21 @@ library
       Helper.Telegram.WebHookInfo
       Helper.Wolfram
       Helper.Wolfram.APIResponse
-      Interface.Entrypoint
+      Interface.BotInfo
+      Interface.Command
       Interface.GetAnswer
+      Interface.GetFunfact
+      Interface.GetIDK
+      Interface.SendMessage
       Interface.ToMarkdown
       Lib
-      UseCase.Ask
+      UseCase.AskWolfram
+      UseCase.Funfact
+      UseCase.Help
+      UseCase.IDK
       UseCase.InterpretBrainfuck
+      UseCase.Settings
+      UseCase.Start
   other-modules:
       Paths_telegram_bot
   hs-source-dirs:
@@ -76,9 +88,11 @@ library
     , extra
     , http-conduit
     , http-types
+    , random
     , scotty
     , stm
     , time
+    , transformers
     , uri-encode
     , utf8-string
   default-language: Haskell2010
@@ -100,10 +114,12 @@ executable telegram-bot-exe
     , extra
     , http-conduit
     , http-types
+    , random
     , scotty
     , stm
     , telegram-bot
     , time
+    , transformers
     , uri-encode
     , utf8-string
   default-language: Haskell2010
@@ -126,10 +142,12 @@ test-suite telegram-bot-test
     , extra
     , http-conduit
     , http-types
+    , random
     , scotty
     , stm
     , telegram-bot
     , time
+    , transformers
     , uri-encode
     , utf8-string
   default-language: Haskell2010

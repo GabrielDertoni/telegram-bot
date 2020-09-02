@@ -1,0 +1,23 @@
+en:I don't know
+de:Ich weiß es nicht
+es:No lo sé
+eo:Mi ne scias
+pl:Nie wiem
+ja:知りません
+zh:我不知道
+el:Δεν γνωρίζω
+tl:Hindi ko alam
+nl:Ik weet het niet
+no:Jeg vet ikke
+ar:انا لا اعرف
+hi:मुझे नहीं पता
+jv:Aku ora ngerti
+la:Nescio
+it:Non lo so
+zu:Angazi
+bg:Не знам
+hy:Չգիտեմ
+pt:Eu não sei
+ru:Я не знаю
+sv:Jag vet inte
+tr:Bilmiyorum

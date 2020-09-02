@@ -13,7 +13,6 @@ import API.UpdateHandler
 import API.GetDataHandler
 import API.GetLogsHandler
 import Helper.Telegram
-import Dataproviders.BotInfo
 import Helper.Telegram.SetWebhook   as Telegram
 import Configuration.TelegramConfig as Telegram
 

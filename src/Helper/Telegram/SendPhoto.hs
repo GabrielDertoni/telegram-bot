@@ -47,7 +47,3 @@ replyPhoto :: Int -> String -> Int -> SendPhoto
 replyPhoto cid photoURL replyId
   = simple { reply_to_message_id = Just replyId }
     where simple = simplePhoto cid photoURL
-
-showBool :: Bool -> String
-showBool True = "true"
-showBool False = "false"

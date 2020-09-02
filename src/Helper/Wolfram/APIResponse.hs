@@ -19,20 +19,18 @@ data QueryResult
   deriving (Eq, Show, Generic)
 
 data Pod
-  = ResultPod  { result_title :: String
-               , pod_id :: String
-               , nsubpods :: Int
+  = ResultPod  { title :: String
                , subpods :: [Subpod]
+               , primary :: Bool
                }
-  | InputPod   { result_title :: String
-                , pod_id :: String
-               , nsubpods :: Int
-                , subpods :: [Subpod]
-                }
-  | GenericPod { result_title :: String
-               , pod_id :: String
-               , nsubpods :: Int
+  | InputPod   { title :: String
                , subpods :: [Subpod]
+               , primary :: Bool
+               }
+  | GenericPod { title :: String
+               , pod_id :: String
+               , subpods :: [Subpod]
+               , primary :: Bool
                }
   deriving (Eq, Show, Generic)
 
@@ -67,35 +65,31 @@ instance Aeson.FromJSON QueryResult where
                        }
 
 isCorrectPod :: Pod -> Bool
-isCorrectPod (ResultPod _ _ nsub _) = nsub >= 2
-isCorrectPod (InputPod _ _ nsub _) = nsub >= 2
-isCorrectPod _ = False
+isCorrectPod = primary
 
 instance Aeson.FromJSON Pod where
   parseJSON (Aeson.Object v) = do
     title   <- v .:  "title"
-    id      <- v .:  "id"
+    pid     <- v .:  "id"
     subpods <- v .:? "subpods"
-    nsub    <- v .:  "numsubpods" :: Aeson.Parser Int
-    case id of
+    prim    <- maybe False id <$> v .:? "primary"
+    case pid of
       "Result" -> return $
-                    ResultPod { result_title = title
-                              , pod_id       = id
-                              , nsubpods     = nsub
-                              , subpods      = subpods ?? []
+                    ResultPod { title   = title
+                              , primary = prim
+                              , subpods = subpods ?? []
                               }
       "Input"  -> return $
-                    InputPod { result_title = title
-                              , pod_id       = id
-                              , nsubpods     = nsub
-                              , subpods      = subpods ?? []
-                              }
+                    InputPod { title    = title
+                             , primary = prim
+                             , subpods = subpods ?? []
+                             }
       _        -> return $
-                    GenericPod { result_title = title
-                                , pod_id       = id
-                                , nsubpods     = nsub
-                                , subpods      = subpods ?? []
-                                }
+                    GenericPod { title   = title
+                               , primary = prim
+                               , pod_id  = pid
+                               , subpods = subpods ?? []
+                               }
 
 instance Aeson.FromJSON Subpod where
   parseJSON (Aeson.Object v) = do

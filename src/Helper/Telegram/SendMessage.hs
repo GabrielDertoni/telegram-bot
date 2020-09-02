@@ -65,9 +65,6 @@ markdownReplyMessage cid markdown replyId
   = replyMsg { parse_mode = Just "MarkdownV2" }
     where replyMsg = replyMessage cid markdown replyId
 
-showBool True = "true"
-showBool False = "false"
-
 type SendMessageResponse = Telegram.ResponseWrapper Telegram.Message
 
 getSentMessage :: SendMessageResponse -> Telegram.Message

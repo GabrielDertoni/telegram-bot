@@ -15,11 +15,14 @@ import qualified Helper.Telegram.SendPhoto       as Method
 import qualified Helper.Telegram.SendMessage     as Method
 import qualified Helper.Telegram.EditMessageText as Method
 import qualified Interface.ToMarkdown            as I
+import qualified Interface.SendMessage           as I
 
 instance I.ToMarkdown Message where
-  markdown (ImageMessage [] img ) = printf "[image](%s)" img
-  markdown (ImageMessage cap img) = printf "[%s](%s)" cap img
-  markdown (TextMessage  text   ) = text
+  markdown msg = case getMessageImage msg of
+                  Just img -> case maybeGetMessageText msg of
+                                Nothing  -> printf "[image](%s)" img
+                                Just cap -> printf "[%s](%s)" cap img
+                  Nothing  -> getMessageText msg
 
 sendPhoto :: Method.SendPhoto -> IO ()
 sendPhoto msg = do
@@ -45,29 +48,21 @@ editMessageText edit = do
     Nothing   -> fail "No message in response"
     Just resp -> return $ Method.getEditedMessage resp
 
-getReplyMessage :: Telegram.Message -> Message -> Method.SendMessage
-getReplyMessage msg ans
-  = case ans of
-      TextMessage  text    -> Method.replyMessage cid text mid
-      ImageMessage img cap -> Method.markdownReplyMessage cid (I.markdown ans) mid
-  where cid  = Telegram.chat_id chat
-        mid  = Telegram.message_id msg
-        chat = Telegram.chat msg
-
-sendReplyTo :: Telegram.Message -> Message -> IO Telegram.Message
-sendReplyTo msg = sendMessage . (getReplyMessage msg)
-
-sendSimpleReplyTo :: Telegram.Message -> String -> IO Telegram.Message
-sendSimpleReplyTo msg = (sendReplyTo msg) . simpleMessage
-
-editSimpleMessage :: Telegram.Message -> String -> IO Telegram.Message
-editSimpleMessage msg = editMessageText . (Method.editMessageText msg)
-
 telegramRequest :: (Query a, Aeson.FromJSON b) => a -> IO b
 telegramRequest q = do
   url <- getURL q
-  Logger.log ("Makin request to URL: " <> url)
+  Logger.log ("Making request to URL: " <> url)
   response <- simpleHttp url
   case Aeson.decode response of
     Nothing  -> fail "Nothing in response." 
     Just res -> return $ Telegram.result res
+
+instance I.SendMessage IO where
+  sendMessage msg@TextMessage{} = do
+    sent <- case getMessageReplyId msg of
+      Nothing     -> sendMessage $ Method.simpleMessage (getMessageChatId msg) (getMessageText msg)
+      Just replid -> sendMessage $ Method.replyMessage (getMessageChatId msg) (getMessageText msg) replid
+    return $ Telegram.getMessageIdentifier sent
+  
+  sendMessage msg@ImageMessage{} = undefined
+  sendMessage msg@EditMessageText{} = undefined

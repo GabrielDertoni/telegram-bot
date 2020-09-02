@@ -1,6 +1,6 @@
-module Dataproviders.AskDataprovider
-  ( AskWolfram(..)
-  , askDataproviderImplementation
+module Dataproviders.WolframDataprovider
+  ( WolframDataprovider(..)
+  , wolframDataprovider
   ) where
 
 import qualified Network.URI.Encode          as URI
@@ -19,13 +19,13 @@ import           Helper.Maybe
 import           Helper.Query
 import           Interface.GetAnswer
 
-data AskWolfram
-  = AskWolfram { format :: String
-               , podstate :: String
-               , includepodid :: [String]
-               }
+data WolframDataprovider
+  = WolframDataprovider { format :: String
+                        , podstate :: String
+                        , includepodid :: [String]
+                        }
 
-instance GetAnswer AskWolfram where
+instance GetAnswer WolframDataprovider where
   getAnswer dataprov (Q.Question str)
     = flip catch handleResponseException $
         do url <- getURL dataprov
@@ -36,21 +36,19 @@ instance GetAnswer AskWolfram where
              Right result -> processResponse result
              Left err     -> fail err
 
-instance Query AskWolfram where
+instance Query WolframDataprovider where
   getURL wolfram = do
     appId <- API.getAppId
-    return $
-      Wolfram.baseURL
-      <:> "output=json"
-      <:> ("appid" <=> appId)
-      <:> ("format" <=> format wolfram)
-      <:> ("podstate" <=> podstate wolfram)
-       <> (foldl (<:>) "" $ map ("includepodid" <=>) $ includepodid wolfram)
+    return $ fromPairs [ ("output", "json")
+                       , ("appid", appId)
+                       , ("format", format wolfram)
+                       , ("podstate", podstate wolfram)
+                       ]
 
 
-askDataproviderImplementation :: AskWolfram
-askDataproviderImplementation
-  = AskWolfram { format = "plaintext,image"
+wolframDataprovider :: WolframDataprovider
+wolframDataprovider
+  = WolframDataprovider { format = "plaintext,image"
                , podstate = "Step-by-step%20solution"
                , includepodid = ["Result", "Input"]
                }

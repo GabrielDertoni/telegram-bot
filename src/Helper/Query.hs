@@ -17,3 +17,7 @@ class Query a where
 
 fromPairs :: [(String, String)] -> String
 fromPairs = intercalate "&" . map (uncurry (<=>)) . filter ((/= 0) . length . snd)
+
+showBool :: Bool -> String
+showBool True  = "true"
+showBool False = "false"
