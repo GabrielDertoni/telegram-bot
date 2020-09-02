@@ -39,8 +39,8 @@ editMessageQuery edit = fromPairs [ ("chat_id"   , show $ chat_id           edit
                                   , ("parse_mode", parse_mode edit ?? "")
                                   ]
 
-editMessageText :: Telegram.Message -> String -> EditMessageText
-editMessageText msg text = EditMessageText (Telegram.getMessageChatID msg) (Telegram.getMessageID msg) text Nothing
+editMessageText :: Int -> Int -> String -> EditMessageText
+editMessageText cid mid text = EditMessageText cid mid text Nothing
 
 type EditMessageTextResponse = Telegram.ResponseWrapper Telegram.Message
 

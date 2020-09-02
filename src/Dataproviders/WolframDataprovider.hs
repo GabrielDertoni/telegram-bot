@@ -38,20 +38,25 @@ instance GetAnswer WolframDataprovider where
 
 instance Query WolframDataprovider where
   getURL wolfram = do
-    appId <- API.getAppId
-    return $ fromPairs [ ("output", "json")
-                       , ("appid", appId)
-                       , ("format", format wolfram)
-                       , ("podstate", podstate wolfram)
-                       ]
+    query <- wolframQuery wolfram
+    return $ Wolfram.baseURL <> query
 
+wolframQuery :: WolframDataprovider -> IO String
+wolframQuery provider = do
+    appId <- API.getAppId
+    return $
+      fromPairs [ ("output", "json")
+                , ("appid", appId)
+                , ("format", format provider)
+                , ("podstate", podstate provider)
+                ]
 
 wolframDataprovider :: WolframDataprovider
 wolframDataprovider
   = WolframDataprovider { format = "plaintext,image"
-               , podstate = "Step-by-step%20solution"
-               , includepodid = ["Result", "Input"]
-               }
+                        , podstate = "Step-by-step%20solution"
+                        , includepodid = ["Result", "Input"]
+                        }
 
 processResponse :: Wolfram.APIResponse -> IO A.Answer
 processResponse response

@@ -35,7 +35,7 @@ sendMessage msg = do
   url <- getURL msg
   Logger.log $ "Send message URL: " <> url
   response <- simpleHttp url
-  case Aeson.decode response of
+  case response `seq` Aeson.decode response of
     Nothing   -> fail "No message in response"
     Just resp -> return $ Method.getSentMessage resp
 
@@ -44,7 +44,7 @@ editMessageText edit = do
   url <- getURL edit
   Logger.log ("Edit message URL: " <> url)
   response <- simpleHttp url
-  case Aeson.decode response of
+  case response `seq` Aeson.decode response of
     Nothing   -> fail "No message in response"
     Just resp -> return $ Method.getEditedMessage resp
 
@@ -65,4 +65,6 @@ instance I.SendMessage IO where
     return $ Telegram.getMessageIdentifier sent
   
   sendMessage msg@ImageMessage{} = undefined
-  sendMessage msg@EditMessageText{} = undefined
+  sendMessage msg@EditMessageText{} = do
+    sent <- editMessageText $ Method.editMessageText (getMessageChatId msg) (edit_message_id msg) (getMessageText msg)
+    return $ Telegram.getMessageIdentifier sent

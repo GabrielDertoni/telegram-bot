@@ -80,7 +80,7 @@ hello = flip simple "Olá você(s)"
 replyToCommand :: Cmd.Command -> String -> Message
 replyToCommand = reply . Cmd.getId
 
-editText :: (Int, Int) -> String -> Message
+editText :: Cmd.MessageId -> String -> Message
 editText (cid, editId) txt
   = EditMessageText { text            = txt
                     , chat_id         = cid

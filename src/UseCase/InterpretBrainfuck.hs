@@ -38,14 +38,15 @@ readFn :: Cmd.MessageId -> Cmd.Command -> TChan Cmd.Command -> TVar [Cmd.Message
 readFn edit_msg prog_cmd chan last_msgs
   = do maybe_msg <- atomically $ readTVar last_msgs
        cmd <- case maybe_msg of
-                []       -> do inp_msg <- I.sendMessage $ Msg.editText (Cmd.getId prog_cmd) "(input required)"
+                []       -> do inp_msg <- I.sendMessage $ Msg.editText edit_msg "(input required)"
                                atomically $ modifyTVar last_msgs (\lst -> inp_msg:lst)
                                waitForResponseToOneOf [inp_msg] chan
 
                 inp_msgs -> waitForResponseToOneOf inp_msgs chan
        
        atomically $ modifyTVar last_msgs (\lst -> Cmd.getId cmd : lst)
-       when (Cmd.getContent cmd == "/kill") $ fail "Program terminated by user"
+       liftIO $ print cmd
+       when (maybe False (== "/kill") $ Cmd.getCommand cmd) $ fail "Program terminated by user"
        return $ Cmd.getContent cmd
 
 writeFn :: Cmd.MessageId -> Cmd.Command -> TChan Cmd.Command -> TVar [Cmd.MessageId] -> String -> IO ()

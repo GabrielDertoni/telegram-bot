@@ -22,8 +22,6 @@ useDefaultPort _ = do putStrLn "No environment variable set for port, using defa
 
 run :: IO ()
 run = do
-    -- Will try to load the environment variables from .env file
-    -- if no such file is found, it will do nothing and may fail later.
     onMissingFile (loadFile defaultConfig) $ return []
     webhookURL <- Telegram.getWebhookURL
     setWebhook $ Telegram.simpleWebhook webhookURL
