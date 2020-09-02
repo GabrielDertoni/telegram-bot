@@ -16,6 +16,4 @@ The project is an attempt to implement clean architecture which gives it more fl
    ```
 
 ## TODO
-- Make the application more use case driven by moving code to that section.
-- Rethink entities and their behaviours.
-- Define better the meaning of an interface in this context.
+- Fix problem with /kill
