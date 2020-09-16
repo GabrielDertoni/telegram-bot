@@ -44,12 +44,15 @@ allCommands = do
   Use.idkCommand
   Use.funfactCommand
 
+handl :: IOException -> IO ()
+handl e = Logger.log $ show e
+
 updateCallback :: STM.TChan Cmd.Command -> Scotty.ActionM ()
 updateCallback broadChan = do
   req <- Scotty.body
   case decodeRequest req of
     Right update -> do liftIO $ STM.atomically $ STM.writeTChan broadChan $ updateToCommand update
-                       liftIO $ sequenceCommands allCommands (Cfg.globalConfig, updateToCommand update, broadChan)
+                       liftIO $ handle handl $ sequenceCommands allCommands (Cfg.globalConfig, updateToCommand update, broadChan)
                        Scotty.text "true"
 
     Left err     -> do liftIO $ Logger.log $ printf "Failed with error: %s\nwhile parsing:\n%s" err $ toString req
