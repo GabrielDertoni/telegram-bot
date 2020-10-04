@@ -5,10 +5,10 @@ module Dataproviders.WolframDataprovider
 
 import qualified Network.URI.Encode          as URI
 import qualified Data.Aeson                  as Aeson
-import           Network.HTTP.Conduit
 import           Data.Maybe
 import           Control.Exception
 
+import           Helper.Request
 import qualified Dataproviders.Logger        as Logger
 import qualified Entity.Question             as Q
 import qualified Entity.Answer               as A
@@ -31,7 +31,7 @@ instance GetAnswer WolframDataprovider where
         do url <- getURL dataprov
            let urlQuery = url <:> ("input" <=> URI.encode str)
            Logger.log ("Querying: " ++ urlQuery)
-           response <- simpleHttp urlQuery
+           response <- requestHttp urlQuery
            case Aeson.eitherDecode response of
              Right result -> processResponse result
              Left err     -> fail err

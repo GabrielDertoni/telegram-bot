@@ -10,6 +10,7 @@ import qualified Data.Aeson                        as Aeson
 import           System.Environment
 import           Network.HTTP.Conduit (simpleHttp)
 
+import           Helper.Request
 import qualified Interface.GetFunfact              as I
 import qualified Interface.BotInfo                 as I
 
@@ -29,7 +30,7 @@ instance I.BotInfo a => I.GetFunfact (FunfactDataprovider a) where
     firestore_url <- getEnv "FIRESTORE_URL"
     info <- I.getIncFunfactInfo $ botInfo provider
     let url = firestore_url <> "databases/(default)/documents/funfacts/" <> show (info `mod` 100)
-    resp <- simpleHttp url
+    resp <- requestHttp url
     case Aeson.decode resp of
       Nothing -> fail "Could't retrieve funfact."
       Just b  -> return $ funfact $ fields b

@@ -41,7 +41,7 @@ allCommands = do
   Use.settingsCommand
   Use.wolframCommand
   Use.brainfuckCommand
-  -- Use.idkCommand
+  Use.idkCommand
   -- Use.funfactCommand
 
 handl :: IOException -> IO ()

@@ -6,6 +6,7 @@ module Dataproviders.IDKDataprovider
 
 import           System.Random
 
+import           Helper.File
 import qualified Interface.GetIDK as I
 
 data IDKDataprovider
@@ -17,7 +18,7 @@ idkDataprovider = IDKDataprovider { fname = "./assets/idks.txt" }
 
 instance I.GetIDK IDKDataprovider where
   getIDK provider = do
-    lst <- lines <$> readFile (fname provider)
+    lst <- lines <$> readFileAsUTF8 (fname provider)
     drop 3 <$> choice lst
 
 choice :: [a] -> IO a

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 28dd7fb7a3de927e4f70236a8ad9529d2695ef7c00883c0f89222f7c9ae3b9a9
+-- hash: e919012b1d60efead6e080c90cc21e06246ffecee02085dddc813376d5f10204
 
 name:           telegram-bot
 version:        0.1.0.0
@@ -46,8 +46,10 @@ library
       Entity.Command
       Entity.Message
       Entity.Question
+      Helper.File
       Helper.Maybe
       Helper.Query
+      Helper.Request
       Helper.Telegram
       Helper.Telegram.EditMessageText
       Helper.Telegram.GetUpdates

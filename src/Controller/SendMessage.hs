@@ -1,13 +1,11 @@
 module Controller.SendMessage where
 
-import           Network.HTTP.Conduit
 import           Control.Exception
 import           Text.Printf
 import qualified Data.Aeson                      as Aeson
 import qualified Network.URI.Encode              as URI
-import           System.Process
-import           Data.ByteString.Lazy.UTF8 (fromString)
 
+import           Helper.Request
 import qualified Dataproviders.Logger            as Logger
 import           Entity.Message
 import           Helper.Query
@@ -29,16 +27,15 @@ instance I.ToMarkdown Message where
 sendPhoto :: Method.SendPhoto -> IO ()
 sendPhoto msg = do
   url <- getURL msg
-  response <- simpleHttp $ url
+  response <- requestHttp $ url
   return ()
 
 sendMessage :: Method.SendMessage -> IO Telegram.Message
 sendMessage msg = do
   url <- getURL msg
   Logger.log $ "Send message URL: " <> url
-  response <- readProcess "curl" ["-s", url] []
-  -- response <- simpleHttp url
-  case response `seq` Aeson.decode (fromString response) of
+  response <- requestHttp url
+  case response `seq` Aeson.decode response of
     Nothing   -> fail "No message in response"
     Just resp -> return $ Method.getSentMessage resp
 
@@ -46,7 +43,7 @@ editMessageText :: Method.EditMessageText -> IO Telegram.Message
 editMessageText edit = do
   url <- getURL edit
   Logger.log ("Edit message URL: " <> url)
-  response <- simpleHttp url
+  response <- requestHttp url
   case response `seq` Aeson.decode response of
     Nothing   -> fail "No message in response"
     Just resp -> return $ Method.getEditedMessage resp
@@ -55,7 +52,7 @@ telegramRequest :: (Query a, Aeson.FromJSON b) => a -> IO b
 telegramRequest q = do
   url <- getURL q
   Logger.log ("Making request to URL: " <> url)
-  response <- simpleHttp url
+  response <- requestHttp url
   case Aeson.decode response of
     Nothing  -> fail "Nothing in response." 
     Just res -> return $ Telegram.result res
