@@ -9,7 +9,6 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.UTF8 as BLU
 import           Control.Exception
 import           Control.Concurrent
-import           GHC.IO.Handle
 import           System.IO
 
 import           Helper.File

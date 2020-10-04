@@ -36,11 +36,14 @@ dependencies:
 - random
 - hspec
 - process
+- deepseq
+- strict
 
 default-extensions:
 - OverloadedStrings
 - DeriveGeneric
 - DeriveAnyClass
+- BangPatterns
 
 library:
   source-dirs: src

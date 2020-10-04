@@ -1,1 +1,1 @@
-web: telegram-bot-exe
+web: telegram-bot-exe +RTS -N

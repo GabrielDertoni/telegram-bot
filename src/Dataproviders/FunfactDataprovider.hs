@@ -4,6 +4,7 @@ module Dataproviders.FunfactDataprovider
   )
   where
 
+import           Helper.File
 import qualified Interface.GetFunfact              as I
 import qualified Interface.BotInfo                 as I
 
@@ -20,7 +21,7 @@ funfactDataprovider binf
 
 instance I.BotInfo a => I.GetFunfact (FunfactDataprovider a) where
   getFunfact provider = do
-    lst <- lines <$> readFile (fname provider)
+    lst <- lines <$> readFileAsUTF8 (fname provider)
     info <- I.getIncFunfactInfo $ botInfo provider
     return $ lst !! fromIntegral (info `mod` fromIntegral (length lst))
 
