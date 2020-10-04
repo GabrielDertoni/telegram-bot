@@ -4,6 +4,12 @@ module Dataproviders.FunfactDataprovider
   )
   where
 
+import           GHC.Generics (Generic)
+import           Data.Aeson ((.:))
+import qualified Data.Aeson                        as Aeson
+import           System.Environment
+import           Network.HTTP.Conduit (simpleHttp)
+
 import qualified Interface.GetFunfact              as I
 import qualified Interface.BotInfo                 as I
 
@@ -20,7 +26,35 @@ funfactDataprovider binf
 
 instance I.BotInfo a => I.GetFunfact (FunfactDataprovider a) where
   getFunfact provider = do
-    lst <- lines <$> readFile (fname provider)
+    firestore_url <- getEnv "FIRESTORE_URL"
     info <- I.getIncFunfactInfo $ botInfo provider
-    return $ lst !! fromIntegral (info `mod` fromIntegral (length lst))
+    let url = firestore_url <> "databases/(default)/documents/funfacts/" <> show (info `mod` 100)
+    resp <- simpleHttp url
+    case Aeson.decode resp of
+      Nothing -> fail "Could't retrieve funfact."
+      Just b  -> return $ funfact $ fields b
 
+data FirestoreGetDocumentResponse a
+  = FirestoreGetDocumentResponse { path :: String
+                                 , fields :: a
+                                 }
+  deriving (Eq, Show, Generic)
+
+instance Aeson.FromJSON a => Aeson.FromJSON (FirestoreGetDocumentResponse a) where
+  parseJSON (Aeson.Object v) = do
+    path   <- v .: "name"
+    fields <- v .: "fields"
+    return $ FirestoreGetDocumentResponse { path   = path
+                                          , fields = fields
+                                          }
+
+data FunfactDocument
+  = FunfactDocument { funfact :: String
+                    }
+  deriving (Eq, Show, Generic)
+
+instance Aeson.FromJSON FunfactDocument where
+  parseJSON (Aeson.Object v) = do
+    dat     <- v .: "data"
+    funfact <- dat .: "stringValue"
+    return $ FunfactDocument { funfact = funfact }

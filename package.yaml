@@ -34,6 +34,8 @@ dependencies:
 - brainfuck-haskell
 - transformers
 - random
+- hspec
+- process
 
 default-extensions:
 - OverloadedStrings

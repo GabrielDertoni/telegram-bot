@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e2006975308dd7d2d2358a56c0a34f3df0263ab6bfbc4f8249fa5b4ddb889773
+-- hash: 28dd7fb7a3de927e4f70236a8ad9529d2695ef7c00883c0f89222f7c9ae3b9a9
 
 name:           telegram-bot
 version:        0.1.0.0
@@ -86,8 +86,10 @@ library
     , brainfuck-haskell
     , dotenv
     , extra
+    , hspec
     , http-conduit
     , http-types
+    , process
     , random
     , scotty
     , stm
@@ -112,8 +114,10 @@ executable telegram-bot-exe
     , brainfuck-haskell
     , dotenv
     , extra
+    , hspec
     , http-conduit
     , http-types
+    , process
     , random
     , scotty
     , stm
@@ -128,6 +132,7 @@ test-suite telegram-bot-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      FunfactSpec
       Paths_telegram_bot
   hs-source-dirs:
       test
@@ -140,8 +145,10 @@ test-suite telegram-bot-test
     , brainfuck-haskell
     , dotenv
     , extra
+    , hspec
     , http-conduit
     , http-types
+    , process
     , random
     , scotty
     , stm

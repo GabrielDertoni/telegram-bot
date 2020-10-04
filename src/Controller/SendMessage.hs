@@ -5,6 +5,8 @@ import           Control.Exception
 import           Text.Printf
 import qualified Data.Aeson                      as Aeson
 import qualified Network.URI.Encode              as URI
+import           System.Process
+import           Data.ByteString.Lazy.UTF8 (fromString)
 
 import qualified Dataproviders.Logger            as Logger
 import           Entity.Message
@@ -34,8 +36,9 @@ sendMessage :: Method.SendMessage -> IO Telegram.Message
 sendMessage msg = do
   url <- getURL msg
   Logger.log $ "Send message URL: " <> url
-  response <- simpleHttp url
-  case response `seq` Aeson.decode response of
+  response <- readProcess "curl" ["-s", url] []
+  -- response <- simpleHttp url
+  case response `seq` Aeson.decode (fromString response) of
     Nothing   -> fail "No message in response"
     Just resp -> return $ Method.getSentMessage resp
 
