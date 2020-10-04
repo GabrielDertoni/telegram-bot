@@ -42,7 +42,7 @@ allCommands = do
   Use.wolframCommand
   Use.brainfuckCommand
   Use.idkCommand
-  -- Use.funfactCommand
+  Use.funfactCommand
 
 handl :: IOException -> IO ()
 handl e = Logger.log $ show e

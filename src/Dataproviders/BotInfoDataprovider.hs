@@ -12,6 +12,7 @@ import           Control.Concurrent
 import           GHC.IO.Handle
 import           System.IO
 
+import           Helper.File
 import           Helper.Maybe
 import           Entity.BotInfo
 import qualified Interface.BotInfo as I
@@ -41,28 +42,18 @@ getBotInfoDataprovider = do
 
 getInfo :: BotInfoDataprovider -> IO BotInfo
 getInfo provider = handle (useDefault provider) $ do
-  handle <- openFile (fname provider) ReadMode
-  hSetEncoding handle utf8
-  -- Aquire a lock on the file resource
-  -- hLock handle ExclusiveLock
-  content <- hGetContents handle
-  return $ (Aeson.decode $ BLU.fromString content) ?? defaultInfo
+  contents <- readFileAsUTF8 $ fname provider
+  return $ (Aeson.decode $ BLU.fromString contents) ?? defaultInfo
 
 setInfo :: BotInfoDataprovider -> BotInfo -> IO ()
 setInfo provider info = do
-  handle <- openFile (fname provider) WriteMode
-  hSetEncoding handle utf8
-  -- Aquire a lock on the file resource
-  -- hLock handle ExclusiveLock
-  hPutStr handle $ BLU.toString $ Aeson.encode info
+  let contents = BLU.toString $ Aeson.encode info
+  writeFileAsUTF8 (fname provider) contents
 
 getIncFunfactInfo :: BotInfoDataprovider -> IO Integer
 getIncFunfactInfo provider = do
-  handle <- openFile (fname provider) ReadWriteMode
-  contents <- hGetContents handle
-  let info = (Aeson.decode $ BLU.fromString contents) ?? defaultInfo
-  let info' = info { funfact_offset = funfact_offset info + 1 }
-  hPutStr handle $ BLU.toString $ Aeson.encode info'
+  info <- getInfo provider
+  info `seq` setInfo provider $ info { funfact_offset = funfact_offset info + 1 }
   return $ funfact_offset info
 
 useDefault :: BotInfoDataprovider -> IOException -> IO BotInfo
